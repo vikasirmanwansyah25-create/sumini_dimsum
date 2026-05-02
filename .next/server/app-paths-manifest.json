@@ -1,0 +1,8 @@
+{
+  "/api/users/route": "app/api/users/route.js",
+  "/cashier/transaksi/page": "app/cashier/transaksi/page.js",
+  "/login/page": "app/login/page.js",
+  "/admin/produk/page": "app/admin/produk/page.js",
+  "/admin/users/page": "app/admin/users/page.js",
+  "/admin/laporan/page": "app/admin/laporan/page.js"
+}
