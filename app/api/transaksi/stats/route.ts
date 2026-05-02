@@ -34,6 +34,7 @@ export async function GET(req: Request) {
     if (cabangId && userIds.length > 0) {
       whereClause.userId = { in: userIds };
     }
+    // If no cabangId or empty userIds, fetch all transactions (no filter)
 
     // 7 days stats
     const { start: start7, end: end7 } = getDateRange(7);

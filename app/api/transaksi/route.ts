@@ -15,7 +15,11 @@ export async function GET(req: Request) {
     const transaksi = await prisma.transaksi.findMany({
       where: whereClause,
       include: { 
-        items: true,
+        items: {
+          include: {
+            menu: true,
+          }
+        },
         user: {
           select: {
             nama: true,

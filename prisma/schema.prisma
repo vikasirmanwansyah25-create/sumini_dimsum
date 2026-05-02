@@ -60,6 +60,7 @@ model Menu {
   resep       Resep[]
   cabangId    String?
   cabang      Cabang?   @relation(fields: [cabangId], references: [id], onDelete: SetNull)
+  cartItems   CartItem[]
 }
 
 model Resep {
@@ -98,5 +99,6 @@ model CartItem {
   harga      Int
   jumlah     Int
   transaksi  Transaksi @relation(fields: [transaksiId], references: [id], onDelete: Cascade)
+  menu       Menu      @relation(fields: [menuId], references: [id])
 }
 

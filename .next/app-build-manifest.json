@@ -26,46 +26,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/users/route.js"
     ],
-    "/cashier/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/cashier/layout.js"
-    ],
-    "/cashier/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/cashier/page.js"
-    ],
-    "/api/transaksi/stats/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/transaksi/stats/route.js"
-    ],
-    "/api/menu/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/menu/route.js"
-    ],
-    "/api/bahan-baku/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/bahan-baku/route.js"
-    ],
-    "/cashier/riwayat/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/cashier/riwayat/page.js"
-    ],
-    "/api/transaksi/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/transaksi/route.js"
-    ],
-    "/cashier/transaksi/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/cashier/transaksi/page.js"
-    ],
     "/admin/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -76,40 +36,45 @@
       "static/chunks/main-app.js",
       "static/chunks/app/admin/page.js"
     ],
-    "/admin/inventory/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/inventory/page.js"
-    ],
     "/api/cabang/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/cabang/route.js"
     ],
-    "/admin/produk/page": [
+    "/api/transaksi/stats/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/admin/produk/page.js"
+      "static/chunks/app/api/transaksi/stats/route.js"
     ],
-    "/api/menu/[id]/route": [
+    "/api/bahan-baku/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/menu/[id]/route.js"
-    ],
-    "/cashier/inventory/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/cashier/inventory/page.js"
+      "static/chunks/app/api/bahan-baku/route.js"
     ],
     "/admin/laporan/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/admin/laporan/page.js"
     ],
+    "/api/transaksi/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/transaksi/route.js"
+    ],
     "/admin/users/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/admin/users/page.js"
+    ],
+    "/admin/produk/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/produk/page.js"
+    ],
+    "/admin/inventory/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/inventory/page.js"
     ]
   }
 }

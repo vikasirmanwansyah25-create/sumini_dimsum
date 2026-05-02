@@ -125,7 +125,7 @@ export const mockTransaksi: Transaksi[] = [
     subtotal: 81000,
     pajak: 8100,
     total: 89100,
-    metodePembayaran: "TRANSFER",
+    metodePembayaran: "QUIRZ",
     bayar: 89100,
     kembalian: 0,
     tanggal: "2024-04-23T11:45:00Z",

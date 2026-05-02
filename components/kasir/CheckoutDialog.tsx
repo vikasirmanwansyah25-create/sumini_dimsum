@@ -16,14 +16,14 @@ import { formatRupiah } from "@/lib/utils";
 import { MetodePembayaran, CartItem } from "@/lib/types";
 import {
   Banknote,
-  Landmark,
   ShoppingBag,
   ChevronRight,
   ChevronLeft,
   Receipt,
   Upload,
   X,
-  ImageIcon,
+  QrCode,
+  Camera,
 } from "lucide-react";
 
 interface CheckoutDialogProps {
@@ -55,17 +55,11 @@ const metodePembayaranOptions: {
     desc: "Bayar dengan uang tunai",
   },
   {
-    value: "TRANSFER",
-    label: "Transfer",
-    icon: <Landmark className="h-5 w-5" />,
-    desc: "Transfer bank",
+    value: "QUIRZ",
+    label: "QRIS",
+    icon: <QrCode className="h-5 w-5" />,
+    desc: "Scan QRIS",
   },
-];
-
-const bankOptions = [
-  { nama: "BCA", rekening: "1234-5678-9012", atasNama: "PT Keripik Pisang" },
-  { nama: "BRI", rekening: "9876-5432-1098", atasNama: "PT Keripik Pisang" },
-  { nama: "Mandiri", rekening: "4567-8901-2345", atasNama: "PT Keripik Pisang" },
 ];
 
 export function CheckoutDialog({
@@ -78,7 +72,6 @@ export function CheckoutDialog({
 }: CheckoutDialogProps) {
   const [metode, setMetode] = React.useState<MetodePembayaran>("TUNAI");
   const [bayarAmount, setBayarAmount] = React.useState("");
-  const [selectedBank, setSelectedBank] = React.useState(bankOptions[0]);
   const [catatan, setCatatan] = React.useState("");
   const [keterangan, setKeterangan] = React.useState("");
   const [buktiPembayaran, setBuktiPembayaran] = React.useState<string | null>(null);
@@ -128,10 +121,10 @@ export function CheckoutDialog({
         alert("Jumlah bayar kurang dari total!");
         return;
       }
-      onCheckout(metode, parseInt(bayarAmount || "0"), Math.max(0, kembalian), catatan, keterangan || undefined);
-    } else if (metode === "TRANSFER") {
+      onCheckout(metode, parseInt(bayarAmount || "0"), Math.max(0, kembalian), catatan, keterangan || undefined, buktiPembayaran || undefined);
+    } else if (metode === "QUIRZ") {
       if (!buktiPembayaran) {
-        alert("Harap upload bukti pembayaran!");
+        alert("Harap upload bukti pembayaran QRIS!");
         return;
       }
       onCheckout(metode, total, 0, catatan, keterangan || undefined, buktiPembayaran);
@@ -140,7 +133,7 @@ export function CheckoutDialog({
 
   const isBayarValid = () => {
     if (metode === "TUNAI") return kembalian >= 0 && bayarAmount !== "";
-    if (metode === "TRANSFER") return !!buktiPembayaran;
+    if (metode === "QUIRZ") return !!buktiPembayaran;
     return false;
   };
 
@@ -307,9 +300,9 @@ export function CheckoutDialog({
                     </div>
                   )}
                   <div className="flex flex-wrap gap-2">
-                    {[total, 50000, 100000, 150000, 200000].map((amount) => (
+                    {[total, 50000, 100000, 150000, 200000].map((amount, idx) => (
                       <Button
-                        key={amount}
+                        key={`${amount}-${idx}`}
                         variant="outline"
                         size="sm"
                         onClick={() => setBayarAmount(amount.toString())}
@@ -323,50 +316,11 @@ export function CheckoutDialog({
                       </Button>
                     ))}
                   </div>
-                </div>
-              )}
 
-              {metode === "TRANSFER" && (
-                <div className="space-y-4">
-                  {/* Bank Info */}
-                  <div className="space-y-2">
+                  {/* Upload Bukti Tunai */}
+                  <div className="space-y-2 pt-2">
                     <label className="text-sm font-medium text-slate-700">
-                      Pilih Bank
-                    </label>
-                    {bankOptions.map((bank) => (
-                      <button
-                        key={bank.nama}
-                        onClick={() => setSelectedBank(bank)}
-                        className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
-                          selectedBank.nama === bank.nama
-                            ? "border-charcoal-800 bg-charcoal-50/50"
-                            : "border-slate-100 hover:border-slate-200"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 text-left">
-                          <Landmark className="h-5 w-5 text-slate-400" />
-                          <div>
-                            <p className="font-medium text-sm text-slate-900">
-                              {bank.nama}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {bank.rekening} a.n {bank.atasNama}
-                            </p>
-                          </div>
-                        </div>
-                        {selectedBank.nama === bank.nama && (
-                          <Badge className="bg-charcoal-800 text-white text-[10px]">
-                            Terpilih
-                          </Badge>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Upload Bukti */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">
-                      Bukti Pembayaran <span className="text-rose-500">*</span>
+                      Bukti Pembayaran <span className="text-slate-400">(opsional)</span>
                     </label>
                     {buktiPembayaran ? (
                       <div className="relative rounded-xl border border-slate-200 overflow-hidden">
@@ -383,21 +337,96 @@ export function CheckoutDialog({
                         </button>
                       </div>
                     ) : (
-                      <label className="flex flex-col items-center justify-center w-full h-32 rounded-xl border-2 border-dashed border-slate-300 hover:border-[#4A776E] hover:bg-[#4A776E]/10/30 transition-all cursor-pointer">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <div className="flex gap-2">
+                        <label className="flex flex-col items-center justify-center flex-1 h-24 rounded-xl border-2 border-dashed border-slate-300 hover:border-[#4A776E] hover:bg-[#4A776E]/10/30 transition-all cursor-pointer">
+                          <Upload className="h-6 w-6 text-slate-400 mb-1" />
+                          <p className="text-xs text-slate-500">Upload File</p>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                          />
+                        </label>
+                        <label className="flex flex-col items-center justify-center flex-1 h-24 rounded-xl border-2 border-dashed border-slate-300 hover:border-[#4A776E] hover:bg-[#4A776E]/10/30 transition-all cursor-pointer">
+                          <Camera className="h-6 w-6 text-slate-400 mb-1" />
+                          <p className="text-xs text-slate-500">Camera</p>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {metode === "QUIRZ" && (
+                <div className="space-y-4">
+                  {/* QRIS Info */}
+                  <div className="bg-slate-50 rounded-xl p-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <QrCode className="h-5 w-5 text-[#4A776E]" />
+                      <span className="text-sm font-medium text-slate-700">Pembayaran QRIS</span>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      Scan QRIS dari aplikasi pembayaran customer, lalu upload buktinya di bawah.
+                    </p>
+                  </div>
+
+                  {/* Upload Bukti QRIS */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">
+                      Bukti Pembayaran <span className="text-rose-500">*</span>
+                    </label>
+                    {buktiPembayaran ? (
+                      <div className="relative rounded-xl border border-slate-200 overflow-hidden">
+                        <img
+                          src={buktiPembayaran}
+                          alt="Bukti pembayaran QRIS"
+                          className="w-full h-48 object-contain bg-slate-50"
+                        />
+                        <button
+                          onClick={removeBukti}
+                          className="absolute top-2 right-2 p-1.5 rounded-lg bg-rose-500 text-white hover:bg-rose-600 transition-colors"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <label className="flex flex-col items-center justify-center flex-1 h-32 rounded-xl border-2 border-dashed border-slate-300 hover:border-[#4A776E] hover:bg-[#4A776E]/10/30 transition-all cursor-pointer">
                           <Upload className="h-8 w-8 text-slate-400 mb-2" />
                           <p className="text-sm text-slate-500">
-                            <span className="font-medium text-[#4A776E]">Klik untuk upload</span> atau drag & drop
+                            <span className="font-medium text-[#4A776E]">Upload File</span>
                           </p>
                           <p className="text-xs text-slate-400 mt-1">PNG, JPG (max 5MB)</p>
-                        </div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileUpload}
-                          className="hidden"
-                        />
-                      </label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                          />
+                        </label>
+                        <label className="flex flex-col items-center justify-center flex-1 h-32 rounded-xl border-2 border-dashed border-slate-300 hover:border-[#4A776E] hover:bg-[#4A776E]/10/30 transition-all cursor-pointer">
+                          <Camera className="h-8 w-8 text-slate-400 mb-2" />
+                          <p className="text-sm text-slate-500">
+                            <span className="font-medium text-[#4A776E]">Camera</span>
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1">Ambil foto langsung</p>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
                     )}
                   </div>
 
@@ -409,7 +438,7 @@ export function CheckoutDialog({
                     <Textarea
                       value={keterangan}
                       onChange={(e) => setKeterangan(e.target.value)}
-                      placeholder="Contoh: Transfer dari BCA, nama pengirim Budi..."
+                      placeholder="Contoh: Pembayaran dari GoPay, OVO, dll..."
                       className="min-h-[80px] border-slate-200 focus-visible:ring-[#4A776E] resize-none"
                     />
                   </div>

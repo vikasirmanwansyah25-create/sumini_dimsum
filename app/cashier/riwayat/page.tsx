@@ -149,7 +149,7 @@ export default function RiwayatPage() {
                         <TableCell className="font-medium">{formatRupiah(trx.total)}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            <Badge variant="outline">{trx.metodePembayaran}</Badge>
+                            <Badge variant="outline">{trx.metodePembayaran === "QUIRZ" ? "QRIS" : trx.metodePembayaran}</Badge>
                             {trx.buktiPembayaran && (
                               <ImageIcon className="h-3.5 w-3.5 text-amber-500" />
                             )}
@@ -196,7 +196,7 @@ export default function RiwayatPage() {
                 </div>
                 <div>
                   <p className="text-slate-500">Metode</p>
-                  <Badge variant="outline">{selectedTransaksi.metodePembayaran}</Badge>
+                  <Badge variant="outline">{selectedTransaksi?.metodePembayaran === "QUIRZ" ? "QRIS" : selectedTransaksi?.metodePembayaran}</Badge>
                 </div>
                 <div>
                   <p className="text-slate-500">Total</p>

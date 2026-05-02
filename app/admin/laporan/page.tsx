@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { FileText, TrendingUp, DollarSign, Calendar, Loader2, Eye, ImageIcon, X } from "lucide-react";
+import { FileText, TrendingUp, DollarSign, Calendar, Loader2, Eye, ImageIcon, X, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatRupiah, formatDate, formatTime } from "@/lib/utils";
+import * as XLSX from "xlsx";
 
 export default function LaporanPage() {
   const [transaksi, setTransaksi] = React.useState([]);
@@ -40,13 +41,55 @@ export default function LaporanPage() {
 
   const totalPenjualan = transaksi.reduce((sum, trx) => sum + trx.total, 0);
   const totalLaba = transaksi.reduce((sum, trx) => {
-    return sum + trx.items.reduce((is, item) => is + (item.hargaJual - item.hargaBeli) * item.jumlah, 0);
+    return sum + trx.items.reduce((is, item) => is + (item.harga - (item.menu?.hargaBeli ?? 0)) * item.jumlah, 0);
   }, 0);
   const totalModal = transaksi.reduce((sum, trx) => {
-    return sum + trx.items.reduce((is, item) => is + item.hargaBeli * item.jumlah, 0);
+    return sum + trx.items.reduce((is, item) => is + (item.menu?.hargaBeli ?? 0) * item.jumlah, 0);
   }, 0);
 
-  const kasirIds = Array.from(new Set(transaksi.map((t) => t.userId)));
+  const exportToExcel = (data: any[], filename: string) => {
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan");
+    XLSX.writeFile(workbook, `${filename}.xlsx`);
+  };
+
+  const handleExportAll = () => {
+    const data = transaksi.map((trx: any) => ({
+      "ID": trx.id.slice(-8).toUpperCase(),
+      "Waktu": `${formatDate(trx.tanggal)} ${formatTime(trx.tanggal)}`,
+      "Item": trx.items.map((i: any) => `${i.jumlah}x ${i.nama}`).join(", "),
+      "Total": trx.total,
+      "Metode": trx.metodePembayaran === "QUIRZ" ? "QRIS" : trx.metodePembayaran,
+    }));
+    exportToExcel(data, `Laporan_Semua_Cabang_${new Date().toISOString().slice(0, 10)}`);
+  };
+
+  const handleExportCabang = (cabangId: string, cabangNama: string) => {
+    const filtered = transaksi.filter((trx: any) => trx.user?.cabang?.id === cabangId);
+
+    const detailData = filtered.map((trx: any) => ({
+      "ID": trx.id.slice(-8).toUpperCase(),
+      "Waktu": `${formatDate(trx.tanggal)} ${formatTime(trx.tanggal)}`,
+      "Item": trx.items.map((i: any) => `${i.jumlah}x ${i.nama}`).join(", "),
+      "Total": trx.total,
+      "Metode": trx.metodePembayaran === "QUIRZ" ? "QRIS" : trx.metodePembayaran,
+    }));
+
+    const workbook = XLSX.utils.book_new();
+    const wsDetail = XLSX.utils.json_to_sheet(detailData);
+    XLSX.utils.book_append_sheet(workbook, wsDetail, "Laporan Penjualan");
+    XLSX.writeFile(workbook, `Laporan_${cabangNama}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const cabangMap = new Map();
+  transaksi.forEach((t) => {
+    const cabang = t.user?.cabang;
+    if (cabang && !cabangMap.has(cabang.id)) {
+      cabangMap.set(cabang.id, cabang.nama);
+    }
+  });
+  const cabangIds = Array.from(cabangMap.keys());
 
   if (loading) {
     return (
@@ -109,17 +152,23 @@ export default function LaporanPage() {
       <Tabs defaultValue="semua">
         <TabsList>
           <TabsTrigger value="semua">Semua Transaksi</TabsTrigger>
-          {kasirIds.map((uid) => (
-            <TabsTrigger key={uid} value={uid}>Kasir {uid.slice(-4)}</TabsTrigger>
+          {cabangIds.map((cid) => (
+            <TabsTrigger key={cid} value={cid}>{cabangMap.get(cid)}</TabsTrigger>
           ))}
         </TabsList>
 
         <TabsContent value="semua">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <FileText className="h-5 w-5 mr-2" />
-                Riwayat Transaksi
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <FileText className="h-5 w-5 mr-2" />
+                  Riwayat Transaksi
+                </div>
+                <Button onClick={handleExportAll} size="sm" className="gap-2 bg-[#4A776E] hover:bg-[#4A776E]/90">
+                  <Download className="h-4 w-4" />
+                  Export Excel
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -152,11 +201,11 @@ export default function LaporanPage() {
                             <p className="text-xs text-charcoal-500">{formatTime(trx.tanggal)}</p>
                           </div>
                         </TableCell>
-                        <TableCell>{trx.userId.slice(-4)}</TableCell>
+                        <TableCell>{trx.user?.cabang?.nama ?? "-"}</TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {trx.items.slice(0, 2).map((item, idx) => (
-                              <Badge key={idx} variant="secondary">{item.jumlah}x {item.rasa}</Badge>
+                              <Badge key={idx} variant="secondary">{item.jumlah}x {item.nama}</Badge>
                             ))}
                             {trx.items.length > 2 && <Badge variant="outline">+{trx.items.length - 2}</Badge>}
                           </div>
@@ -192,10 +241,18 @@ export default function LaporanPage() {
           </Card>
         </TabsContent>
 
-        {kasirIds.map((uid) => (
-          <TabsContent key={uid} value={uid}>
+        {cabangIds.map((cid) => (
+          <TabsContent key={cid} value={cid}>
             <Card>
-              <CardHeader><CardTitle>Transaksi Kasir {uid.slice(-4)}</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Transaksi {cabangMap.get(cid)}</span>
+                  <Button onClick={() => handleExportCabang(cid, cabangMap.get(cid))} size="sm" className="gap-2 bg-[#4A776E] hover:bg-[#4A776E]/90">
+                    <Download className="h-4 w-4" />
+                    Export Excel
+                  </Button>
+                </CardTitle>
+              </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
@@ -209,14 +266,14 @@ export default function LaporanPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {transaksi.filter((trx) => trx.userId === uid).map((trx) => (
+                    {transaksi.filter((trx) => trx.user?.cabang?.id === cid).map((trx) => (
                       <TableRow key={trx.id}>
                         <TableCell className="font-medium">#{trx.id.slice(-6).toUpperCase()}</TableCell>
                         <TableCell>{formatTime(trx.tanggal)}</TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {trx.items.slice(0, 2).map((item, idx) => (
-                              <Badge key={idx} variant="secondary">{item.jumlah}x {item.rasa}</Badge>
+                              <Badge key={idx} variant="secondary">{item.jumlah}x {item.nama}</Badge>
                             ))}
                             {trx.items.length > 2 && <Badge variant="outline">+{trx.items.length - 2}</Badge>}
                           </div>
@@ -269,7 +326,7 @@ export default function LaporanPage() {
                 </div>
                 <div>
                   <p className="text-slate-500">Kasir</p>
-                  <p className="font-medium">{selectedTransaksi.userId.slice(-4)}</p>
+                  <p className="font-medium">{selectedTransaksi.user?.cabang?.nama ?? "-"}</p>
                 </div>
                 <div>
                   <p className="text-slate-500">Metode</p>
@@ -287,9 +344,9 @@ export default function LaporanPage() {
                   <div key={idx} className="flex justify-between items-center px-3 py-2">
                     <div>
                       <p className="font-medium text-sm">{item.nama}</p>
-                      <p className="text-xs text-slate-500">{item.jumlah} × {formatRupiah(item.hargaJual)}</p>
+                      <p className="text-xs text-slate-500">{item.jumlah} × {formatRupiah(item.harga)}</p>
                     </div>
-                    <span className="font-semibold text-sm">{formatRupiah(item.hargaJual * item.jumlah)}</span>
+                    <span className="font-semibold text-sm">{formatRupiah(item.harga * item.jumlah)}</span>
                   </div>
                 ))}
                 <div className="px-3 py-2 bg-slate-50 flex justify-between font-bold text-sm">

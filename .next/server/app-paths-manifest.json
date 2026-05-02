@@ -1,8 +1,12 @@
 {
   "/api/users/route": "app/api/users/route.js",
-  "/cashier/transaksi/page": "app/cashier/transaksi/page.js",
+  "/api/cabang/route": "app/api/cabang/route.js",
+  "/api/transaksi/route": "app/api/transaksi/route.js",
+  "/api/bahan-baku/route": "app/api/bahan-baku/route.js",
   "/login/page": "app/login/page.js",
-  "/admin/produk/page": "app/admin/produk/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/laporan/page": "app/admin/laporan/page.js",
   "/admin/users/page": "app/admin/users/page.js",
-  "/admin/laporan/page": "app/admin/laporan/page.js"
+  "/admin/produk/page": "app/admin/produk/page.js",
+  "/admin/inventory/page": "app/admin/inventory/page.js"
 }

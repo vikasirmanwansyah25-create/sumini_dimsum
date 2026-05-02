@@ -34,10 +34,24 @@ export default function AdminDashboard() {
   const [stats, setStats] = React.useState<any>(null);
   const [produkList, setProdukList] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [cabangList, setCabangList] = React.useState<any[]>([]);
+  const [selectedCabangId, setSelectedCabangId] = React.useState<string>("all");
 
   React.useEffect(() => {
     Promise.all([
-      fetch("/api/transaksi/stats").then((r) => r.json()),
+      fetch("/api/cabang").then((r) => r.json()),
+    ])
+      .then(([cabangJson]) => {
+        if (cabangJson.success) setCabangList(cabangJson.data);
+      })
+      .catch(console.error);
+  }, []);
+
+  React.useEffect(() => {
+    setLoading(true);
+    const params = selectedCabangId !== "all" ? `?cabangId=${selectedCabangId}` : "";
+    Promise.all([
+      fetch(`/api/transaksi/stats${params}`).then((r) => r.json()),
       fetch("/api/bahan-baku").then((r) => r.json()),
     ])
       .then(([statsJson, bahanJson]: [any, any]) => {
@@ -46,9 +60,11 @@ export default function AdminDashboard() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  }, [selectedCabangId]);
 
-  const stokMenipis = produkList.filter((p: any) => p.stok < 20);
+  const stokMenipis = selectedCabangId !== "all"
+    ? produkList.filter((p: any) => p.stok < 20 && p.cabangId === selectedCabangId)
+    : produkList.filter((p: any) => p.stok < 20);
 
   const statCards = stats
     ? [
@@ -119,10 +135,16 @@ export default function AdminDashboard() {
               {new Date().toLocaleDateString("id-ID")}
             </span>
           </div>
-          <div className="flex items-center gap-2 px-2 lg:px-3 py-1.5 lg:py-2 bg-slate-100 border border-slate-200 rounded-lg">
-            <Store className="h-3 lg:h-4 w-3 lg:w-4 text-slate-500" />
-            <span className="text-xs lg:text-sm font-medium text-slate-600">SUMINI-DIMSUM</span>
-          </div>
+          <select
+            value={selectedCabangId}
+            onChange={(e) => setSelectedCabangId(e.target.value)}
+            className="px-2 lg:px-3 py-1.5 lg:py-2 bg-white border border-slate-200 rounded-lg text-xs lg:text-sm font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#4A776E] cursor-pointer"
+          >
+            <option value="all">Semua Cabang</option>
+            {cabangList.map((cabang: any) => (
+              <option key={cabang.id} value={cabang.id}>{cabang.nama}</option>
+            ))}
+          </select>
         </div>
       </div>
 

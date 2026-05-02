@@ -35,7 +35,7 @@ interface SuccessDialogProps {
 
 const metodeLabel: Record<MetodePembayaran, string> = {
   TUNAI: "Tunai",
-  TRANSFER: "Transfer Bank",
+  QUIRZ: "QRIS",
 };
 
 export function SuccessDialog({

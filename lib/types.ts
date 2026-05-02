@@ -1,6 +1,6 @@
 export type UserRole = "ADMIN" | "KASIR";
 
-export type MetodePembayaran = "TUNAI" | "TRANSFER";
+export type MetodePembayaran = "TUNAI" | "QUIRZ";
 
 export interface Cabang {
   id: string;
