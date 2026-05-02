@@ -101,7 +101,7 @@ export function ProdukList({ filterKategori, onFilterChange, onAddItem, cabangId
           </SelectTrigger>
           <SelectContent>
             {kategoriOptions.map((kat) => (
-              <SelectItem key={kat} value={kat}>
+              <SelectItem key={kat} value={kat as string}>
                 {kat}
               </SelectItem>
             ))}
