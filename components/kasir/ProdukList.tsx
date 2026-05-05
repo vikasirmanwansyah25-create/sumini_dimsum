@@ -29,7 +29,7 @@ export function ProdukList({ filterKategori, onFilterChange, onAddItem, cabangId
 
   // Dynamic kategori options from menu data
   const kategoriOptions = React.useMemo(() => {
-    const uniqueKategori = Array.from(new Set(menu.map((p) => p.kategori).filter(Boolean)));
+    const uniqueKategori = Array.from(new Set(menu.map((p) => p.kategori).filter((k): k is string => typeof k === "string")));
     return ["Semua", ...uniqueKategori.sort()];
   }, [menu]);
 

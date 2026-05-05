@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatRupiah } from "@/lib/utils";
+import { uploadImageToCloudinary } from "@/lib/cloudinary";
 
 interface Cabang {
   id: string;
@@ -56,7 +57,7 @@ export default function ProdukPage() {
   const [cabang, setCabang] = React.useState<Cabang[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [filterCabang, setFilterCabang] = React.useState<string>("all");
+const [filterCabang, setFilterCabang] = React.useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [selectedProduk, setSelectedProduk] = React.useState<Produk | null>(null);
@@ -73,6 +74,7 @@ export default function ProdukPage() {
     cabangId: null as string | null,
   });
   const [imagePreview, setImagePreview] = React.useState<string>("");
+  const [uploading, setUploading] = React.useState(false);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -84,7 +86,13 @@ export default function ProdukPage() {
         const produkJson = await produkRes.json();
         const cabangJson = await cabangRes.json();
         if (produkJson.success) setProduk(produkJson.data);
-        if (cabangJson.success) setCabang(cabangJson.data);
+        else console.error("Gagal fetch produk:", produkJson.message);
+        if (cabangJson.success) {
+          setCabang(cabangJson.data);
+          console.log("Data cabang:", cabangJson.data);
+        } else {
+          console.error("Gagal fetch cabang:", cabangJson.message);
+        }
       } catch (error) {
         console.error("Fetch error:", error);
         alert("Gagal memuat data");
@@ -126,7 +134,7 @@ export default function ProdukPage() {
     setIsDialogOpen(true);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -140,13 +148,17 @@ export default function ProdukPage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      setImagePreview(base64);
-      setFormData({ ...formData, gambar: base64 });
-    };
-    reader.readAsDataURL(file);
+    setUploading(true);
+    try {
+      const imageUrl = await uploadImageToCloudinary(file);
+      setImagePreview(imageUrl);
+      setFormData({ ...formData, gambar: imageUrl });
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      alert("Gagal upload gambar: " + error.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const filteredProduk = produk.filter((p) => {
@@ -185,7 +197,7 @@ export default function ProdukPage() {
         }
         setIsDialogOpen(false);
       } else {
-        alert(json.message || "Gagal menyimpan produk");
+        alert("Gagal menyimpan: " + (json.message || "Terjadi kesalahan"));
       }
     } catch (err) {
       console.error("Save error:", err);
@@ -246,21 +258,25 @@ export default function ProdukPage() {
                 className="pl-9 h-10 bg-white border-slate-200"
               />
             </div>
-            <div className="w-full sm:w-[280px]">
-              <Select value={filterCabang} onValueChange={setFilterCabang}>
-                <SelectTrigger className="h-10 bg-white border-slate-200 w-full">
-                  <SelectValue placeholder="Pilih Cabang" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Cabang</SelectItem>
-                  {cabang.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.nama}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+<div className="w-full sm:w-[280px]">
+               <Select value={filterCabang} onValueChange={setFilterCabang}>
+                 <SelectTrigger className="h-10 bg-white border-slate-200 w-full">
+                   <SelectValue placeholder="Pilih Cabang" />
+                 </SelectTrigger>
+<SelectContent>
+                    <SelectItem value="all">Semua Cabang</SelectItem>
+                    {cabang.length === 0 ? (
+                      <SelectItem value="loading" disabled>Memuat data cabang...</SelectItem>
+                    ) : (
+                      cabang.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.nama}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+               </Select>
+             </div>
           </div>
 
           <div className="overflow-auto border border-slate-100 rounded-xl">
@@ -317,9 +333,9 @@ export default function ProdukPage() {
                           {p.kategori}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-slate-600">
-                        {p.cabang?.nama || "Semua Cabang"}
-                      </TableCell>
+<TableCell className="text-sm text-slate-600">
+                         {p.cabang?.nama || "-"}{p.cabang?.alamat && <div className="text-xs text-slate-400">{p.cabang.alamat}</div>}
+                       </TableCell>
                       <TableCell className="text-sm text-slate-900">
                         {formatRupiah(p.harga)}
                       </TableCell>
@@ -406,21 +422,24 @@ export default function ProdukPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700">Cabang</label>
+              <label className="text-sm font-medium text-slate-700">Cabang *</label>
               <Select
-                value={formData.cabangId || "all"}
-                onValueChange={(val) => setFormData({ ...formData, cabangId: val === "all" ? null : val })}
+                value={formData.cabangId || ""}
+                onValueChange={(val) => setFormData({ ...formData, cabangId: val })}
               >
                 <SelectTrigger className="h-10 border-slate-200">
                   <SelectValue placeholder="Pilih Cabang" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Semua Cabang</SelectItem>
-                  {cabang.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.nama}
-                    </SelectItem>
-                  ))}
+                  {cabang.length === 0 ? (
+                    <SelectItem value="loading" disabled>Memuat data cabang...</SelectItem>
+                  ) : (
+                    cabang.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.nama}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -449,17 +468,26 @@ export default function ProdukPage() {
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-700">Gambar</label>
               <div className="flex items-center gap-3 lg:gap-4">
-                <label className="cursor-pointer flex items-center gap-2 px-3 lg:px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition text-sm text-slate-600">
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChange}
-                    id="upload-file"
-                  />
-                  <ImageIcon className="h-4 w-4" />
-                  <span>Upload Gambar</span>
-                </label>
+              <label className="cursor-pointer flex items-center gap-2 px-3 lg:px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition text-sm text-slate-600">
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageChange}
+                      id="upload-file"
+                    />
+                    <ImageIcon className="h-4 w-4" />
+                    <span>Upload Gambar</span>
+                  </>
+                )}
+              </label>
               </div>
               {imagePreview && (
                 <img

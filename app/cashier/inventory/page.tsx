@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuthStore } from "@/store/auth";
+import { uploadImageToCloudinary } from "@/lib/cloudinary";
 
 interface Cabang {
   id: string;
@@ -142,7 +143,9 @@ export default function CashierInventoryPage() {
     setFormData({ ...formData, jenisProduk: jenis, rasa: jenis === "Barang" ? "" : formData.rasa });
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [uploading, setUploading] = React.useState(false);
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -156,13 +159,17 @@ export default function CashierInventoryPage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      setImagePreview(base64);
-      setFormData({ ...formData, gambar: base64 });
-    };
-    reader.readAsDataURL(file);
+    setUploading(true);
+    try {
+      const imageUrl = await uploadImageToCloudinary(file);
+      setImagePreview(imageUrl);
+      setFormData({ ...formData, gambar: imageUrl });
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      alert("Gagal upload gambar: " + error.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSave = async () => {
@@ -512,22 +519,30 @@ export default function CashierInventoryPage() {
                     <SelectTrigger className="w-[120px]">
                       <SelectValue placeholder="Satuan" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pcs">Pcs</SelectItem>
-                      <SelectItem value="pack">Pack</SelectItem>
-                      <SelectItem value="box">Box</SelectItem>
-                    </SelectContent>
+                     <SelectContent>
+                        <SelectItem value="pcs">Pcs</SelectItem>
+                        <SelectItem value="pack">Pack</SelectItem>
+                        <SelectItem value="box">Box</SelectItem>
+                      </SelectContent>
                   </Select>
                 </div>
               </div>
             </div>
-            <div>
-              <label className="text-sm font-medium">Gambar</label>
-              <Input type="file" accept="image/*" onChange={handleImageChange} />
-              {imagePreview && (
-                <img src={imagePreview} alt="Preview" className="mt-2 h-20 w-20 object-cover rounded-lg" />
-              )}
-            </div>
+             <div>
+               <label className="text-sm font-medium">Gambar</label>
+               <div className="flex items-center gap-2">
+                 <Input 
+                   type="file" 
+                   accept="image/*" 
+                   onChange={handleImageChange}
+                   disabled={uploading}
+                 />
+                 {uploading && <Loader2 className="h-4 w-4 animate-spin" />}
+               </div>
+               {imagePreview && (
+                 <img src={imagePreview} alt="Preview" className="mt-2 h-20 w-20 object-cover rounded-lg" />
+               )}
+             </div>
             <div>
               <label className="text-sm font-medium">Deskripsi</label>
               <Input

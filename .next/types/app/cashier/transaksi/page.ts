@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 // File: C:\Users\IMAM\Desktop\Vikas\Mencoba\app\cashier\transaksi\page.tsx
+=======
+// File: C:\Users\IMAM\Desktop\Vikas\umkm\app\cashier\transaksi\page.tsx
+>>>>>>> 73259c0 (first commit)
 import * as entry from '../../../../../app/cashier/transaksi/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

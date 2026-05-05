@@ -15,17 +15,41 @@ import {
 } from "recharts";
 import { TrendingUp, DollarSign, ShoppingBag, Package, ArrowUpRight, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Cabang } from "@/lib/types";
 
 export default function CashierDashboardPage() {
   const [stats, setStats] = React.useState<any>(null);
   const [stokMenipis, setStokMenipis] = React.useState<any[]>([]);
   const [loadingStats, setLoadingStats] = React.useState(true);
+  const [cabangData, setCabangData] = React.useState<Cabang | null>(null);
 
   const { currentUser } = useAuthStore();
 
   React.useEffect(() => {
     fetchDashboardData();
+    fetchCabangData();
   }, [currentUser?.cabangId]);
+
+  const fetchCabangData = async () => {
+    if (currentUser?.cabang?.nama) {
+      setCabangData(currentUser.cabang as Cabang);
+      return;
+    }
+
+    if (currentUser?.cabangId) {
+      try {
+        const res = await fetch(`/api/cabang/${currentUser.cabangId}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setCabangData(json.data);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching cabang:", error);
+      }
+    }
+  };
 
   const fetchDashboardData = async () => {
     setLoadingStats(true);
@@ -46,6 +70,8 @@ export default function CashierDashboardPage() {
       setLoadingStats(false);
     }
   };
+
+  const cabangName = cabangData?.nama || currentUser?.cabang?.nama || "Pusat";
 
   const statCards = stats
     ? [
@@ -97,7 +123,9 @@ export default function CashierDashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-lg lg:text-xl font-bold text-slate-800">SUMINI-DIMSUM</h1>
-        <p className="text-sm lg:text-base text-slate-500">Dashboard Cabang {currentUser?.cabang?.nama || ""}</p>
+        <p className="text-sm lg:text-base text-slate-500">
+          Dashboard {cabangName}
+        </p>
       </div>
 
       {loadingStats ? (

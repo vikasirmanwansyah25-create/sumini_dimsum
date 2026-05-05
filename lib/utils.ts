@@ -19,14 +19,16 @@ export function formatDate(dateString: string): string {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: "Asia/Jakarta",
   });
 }
 
 export function formatTime(dateString: string): string {
-  return new Date(dateString).toLocaleTimeString("id-ID", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const date = new Date(dateString); // Waktu UTC dari database
+  // Konversi ke WIB (UTC+7)
+  const wibHours = (date.getUTCHours() + 7) % 24;
+  const wibMinutes = date.getUTCMinutes();
+  return `${wibHours.toString().padStart(2, '0')}.${wibMinutes.toString().padStart(2, '0')}`;
 }
 
 export function getTodayDate(): string {

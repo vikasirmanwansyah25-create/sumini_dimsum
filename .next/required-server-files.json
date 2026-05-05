@@ -99,7 +99,11 @@
         "transform": "lodash/{{member}}"
       }
     },
+<<<<<<< HEAD
     "outputFileTracingRoot": "C:\\Users\\IMAM\\Desktop\\Vikas\\Mencoba",
+=======
+    "outputFileTracingRoot": "C:\\Users\\IMAM\\Desktop\\Vikas\\umkm",
+>>>>>>> 73259c0 (first commit)
     "experimental": {
       "useSkewCookie": false,
       "cacheLife": {
@@ -289,10 +293,17 @@
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.js",
     "turbopack": {
+<<<<<<< HEAD
       "root": "C:\\Users\\IMAM\\Desktop\\Vikas\\Mencoba"
     }
   },
   "appDir": "C:\\Users\\IMAM\\Desktop\\Vikas\\Mencoba",
+=======
+      "root": "C:\\Users\\IMAM\\Desktop\\Vikas\\umkm"
+    }
+  },
+  "appDir": "C:\\Users\\IMAM\\Desktop\\Vikas\\umkm",
+>>>>>>> 73259c0 (first commit)
   "relativeAppDir": "",
   "files": [
     ".next\\routes-manifest.json",

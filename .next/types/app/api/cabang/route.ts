@@ -1,4 +1,4 @@
-// File: C:\Users\IMAM\Desktop\Vikas\Mencoba\app\api\cabang\route.ts
+// File: C:\Users\IMAM\Desktop\Vikas\umkm\app\api\cabang\route.ts
 import * as entry from '../../../../../app/api/cabang/route.js'
 import type { NextRequest } from 'next/server.js'
 

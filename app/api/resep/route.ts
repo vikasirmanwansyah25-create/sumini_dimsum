@@ -1,19 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabaseClient";
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const menuId = searchParams.get("menuId");
-    
-    const where: any = {};
-    if (menuId) where.menuId = menuId;
-    
-    const reseps = await prisma.resep.findMany({
-      where,
-      include: { bahanBaku: true, menu: true },
-      orderBy: { id: "desc" },
-    });
+
+    let query = supabase
+      .from('Resep')
+      .select('*, BahanBaku!bahanBakuId(*), Menu!menuId(*)')
+      .order('id', { ascending: false });
+
+    if (menuId) {
+      query = query.eq('menuId', menuId);
+    }
+
+    const { data: reseps, error } = await query;
+
+    if (error) throw error;
     return NextResponse.json({ success: true, data: reseps });
   } catch (error) {
     console.error("GET /api/resep error:", error);
@@ -36,14 +40,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const resep = await prisma.resep.create({
-      data: {
-        menuId,
-        bahanBakuId,
+    const { data: resep, error } = await supabase
+      .from('Resep')
+      .insert({
+        menuId: menuId,
+        bahanBakuId: bahanBakuId,
         jumlah: Number(jumlah),
-      },
-      include: { bahanBaku: true, menu: true },
-    });
+      })
+      .select('*, BahanBaku!bahanBakuId(*), Menu!menuId(*)')
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true, data: resep }, { status: 201 });
   } catch (error) {

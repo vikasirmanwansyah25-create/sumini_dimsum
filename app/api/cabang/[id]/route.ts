@@ -1,5 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabaseClient";
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    const { data: cabang, error } = await supabase
+      .from('Cabang')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error || !cabang) {
+      return NextResponse.json(
+        { success: false, message: "Cabang tidak ditemukan" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, data: cabang });
+  } catch (error) {
+    console.error("GET /api/cabang/[id] error:", error);
+    return NextResponse.json(
+      { success: false, message: "Gagal mengambil data cabang" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function PUT(
   req: NextRequest,
@@ -10,7 +40,12 @@ export async function PUT(
     const body = await req.json();
     const { nama, alamat, telepon } = body;
 
-    const existing = await prisma.cabang.findUnique({ where: { id } });
+    const { data: existing, error: checkError } = await supabase
+      .from('Cabang')
+      .select('id')
+      .eq('id', id)
+      .single();
+
     if (!existing) {
       return NextResponse.json(
         { success: false, message: "Cabang tidak ditemukan" },
@@ -18,14 +53,18 @@ export async function PUT(
       );
     }
 
-    const cabang = await prisma.cabang.update({
-      where: { id },
-      data: {
+    const { data: cabang, error } = await supabase
+      .from('Cabang')
+      .update({
         nama,
         alamat: alamat || null,
         telepon: telepon || null,
-      },
-    });
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true, data: cabang });
   } catch (error) {
@@ -44,7 +83,12 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const existing = await prisma.cabang.findUnique({ where: { id } });
+    const { data: existing, error: checkError } = await supabase
+      .from('Cabang')
+      .select('id')
+      .eq('id', id)
+      .single();
+
     if (!existing) {
       return NextResponse.json(
         { success: false, message: "Cabang tidak ditemukan" },
@@ -52,7 +96,12 @@ export async function DELETE(
       );
     }
 
-    await prisma.cabang.delete({ where: { id } });
+    const { error } = await supabase
+      .from('Cabang')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true, message: "Cabang berhasil dihapus" });
   } catch (error) {

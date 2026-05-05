@@ -48,7 +48,6 @@ export interface Transaksi {
   userId: string;
   items: CartItem[];
   subtotal: number;
-  pajak: number;
   total: number;
   metodePembayaran: MetodePembayaran;
   bayar: number;

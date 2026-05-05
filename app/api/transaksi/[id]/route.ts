@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { supabase } from "../../../../lib/supabaseClient";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -7,10 +7,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { buktiPenjualan } = body;
     const { id } = await params;
 
-    const transaksi = await prisma.transaksi.update({
-      where: { id },
-      data: { buktiPenjualan },
-    });
+    const { data: transaksi, error } = await supabase
+      .from('Transaksi')
+      .update({ buktiPenjualan: buktiPenjualan })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true, data: transaksi });
   } catch (error) {

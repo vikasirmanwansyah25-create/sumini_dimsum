@@ -48,6 +48,8 @@ export default function CashierTransaksiPage() {
     setLoading(true);
     try {
       const transaksiId = `TRX-${Date.now()}`;
+      // Gunakan waktu lokal WIB
+      const now = new Date();
       const payload = {
         userId: currentUser.id,
         items: items.map((item) => ({
@@ -65,6 +67,7 @@ export default function CashierTransaksiPage() {
         catatan,
         keterangan,
         buktiPembayaran,
+        tanggal: now.toISOString(),
       };
 
       const res = await fetch("/api/transaksi", {
@@ -81,6 +84,8 @@ export default function CashierTransaksiPage() {
         return;
       }
 
+      // Gunakan waktu sekarang (WIB) dari browser
+      
       const transaksiData = {
         id: json.data.id,
         ...payload,
@@ -88,7 +93,7 @@ export default function CashierTransaksiPage() {
           ...item,
           id: item.id,
         })),
-        tanggal: json.data.tanggal || new Date().toISOString(),
+        tanggal: now.toISOString(),
       };
 
       setLastTransaksi(transaksiData);
@@ -153,6 +158,9 @@ export default function CashierTransaksiPage() {
           kembalian={lastTransaksi.kembalian}
           catatan={lastTransaksi.catatan}
           tanggal={lastTransaksi.tanggal}
+          cabangNama={currentUser?.cabang?.nama || ""}
+          cabangAlamat={currentUser?.cabang?.alamat || ""}
+          cabangTelepon={currentUser?.cabang?.telepon || ""}
         />
       )}
     </div>

@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabaseClient";
+import { randomUUID } from "crypto";
 
 export async function GET() {
   try {
-    const cabang = await prisma.cabang.findMany({
-      orderBy: { createdAt: "desc" },
-      include: { bahanBaku: true },
-    });
-    return NextResponse.json({ success: true, data: cabang });
+    const { data: cabang, error } = await supabase
+      .from('Cabang')
+      .select('*')
+      .order('createdAt', { ascending: false });
+
+    if (error) {
+      console.error("Supabase GET cabang error:", error);
+      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    }
+    
+    return NextResponse.json({ success: true, data: cabang || [] });
   } catch (error) {
     console.error("GET /api/cabang error:", error);
     return NextResponse.json(
@@ -29,13 +36,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const cabang = await prisma.cabang.create({
-      data: {
-        nama,
-        alamat: alamat || null,
-        telepon: telepon || null,
-      },
-    });
+    const cabangData = {
+      id: randomUUID(),
+      nama,
+      alamat: alamat || null,
+      telepon: telepon || null,
+    };
+
+    const { data: cabang, error } = await supabase
+      .from('Cabang')
+      .insert(cabangData)
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      console.error("Supabase POST cabang error:", error);
+      return NextResponse.json(
+        { success: false, message: error.message },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ success: true, data: cabang }, { status: 201 });
   } catch (error) {

@@ -1,4 +1,4 @@
-// File: C:\Users\IMAM\Desktop\Vikas\Mencoba\app\api\transaksi\stats\route.ts
+// File: C:\Users\IMAM\Desktop\Vikas\umkm\app\api\transaksi\stats\route.ts
 import * as entry from '../../../../../../app/api/transaksi/stats/route.js'
 import type { NextRequest } from 'next/server.js'
 

@@ -163,4 +163,26 @@
 .animate-shimmer-bar { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); background-size: 200% 100%; animation: shimmer-bar 1.5s linear infinite; }
 .animate-shake      { animation: shake 0.3s ease-in-out; }
 .animate-glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
-.animate-morph      { animation: morph 3s ease-in-out infinite; }
+ .animate-morph      { animation: morph 3s ease-in-out infinite; }
+
+/* ── Print Styles for Receipt ── */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .receipt-print-area,
+  .receipt-print-area * {
+    visibility: visible;
+  }
+  
+  .receipt-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 80mm;
+    padding: 5mm;
+    margin: 0 auto;
+  }
+}

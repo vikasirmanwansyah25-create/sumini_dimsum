@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatRupiah } from "@/lib/utils";
+import { uploadImageToCloudinary } from "@/lib/cloudinary";
 
 interface Cabang {
   id: string;
@@ -68,7 +69,9 @@ export default function InventoryPage() {
         const bahanJson = await bahanRes.json();
         const cabangJson = await cabangRes.json();
         if (bahanJson.success) setBahanBaku(bahanJson.data);
+        else console.error("Gagal fetch bahan:", bahanJson.message);
         if (cabangJson.success) setCabang(cabangJson.data);
+        else console.error("Gagal fetch cabang:", cabangJson.message);
       } catch (error) {
         console.error("Fetch error:", error);
         alert("Gagal memuat data");
@@ -96,6 +99,7 @@ export default function InventoryPage() {
     satuan: "pcs",
   });
   const [imagePreview, setImagePreview] = React.useState<string>("");
+  const [uploading, setUploading] = React.useState(false);
 
   const handleOpenDialog = (p?: BahanBaku) => {
     if (p) {
@@ -122,7 +126,7 @@ export default function InventoryPage() {
         gambar: "",
         deskripsi: "",
         jenisProduk: "Makanan",
-        cabangId: filterCabang || "",
+        cabangId: (filterCabang && filterCabang !== "all") ? filterCabang : (cabang[0]?.id || ""),
         satuan: "pcs",
       });
       setImagePreview("");
@@ -134,7 +138,7 @@ export default function InventoryPage() {
     setFormData({ ...formData, jenisProduk: jenis, rasa: jenis === "Barang" ? "" : formData.rasa });
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -148,13 +152,17 @@ export default function InventoryPage() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64 = reader.result as string;
-      setImagePreview(base64);
-      setFormData({ ...formData, gambar: base64 });
-    };
-    reader.readAsDataURL(file);
+    setUploading(true);
+    try {
+      const imageUrl = await uploadImageToCloudinary(file);
+      setImagePreview(imageUrl);
+      setFormData({ ...formData, gambar: imageUrl });
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      alert("Gagal upload gambar: " + error.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const filteredBahan = bahanBaku.filter((p) => {
@@ -272,14 +280,14 @@ export default function InventoryPage() {
                 <SelectTrigger className="h-10 bg-white border-slate-200 w-full">
                   <SelectValue placeholder="Pilih Cabang" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Cabang</SelectItem>
-                  {cabang.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.nama}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+<SelectContent>
+                   <SelectItem value="all">Semua Cabang</SelectItem>
+                   {cabang.map((c) => (
+                     <SelectItem key={c.id} value={c.id}>
+                       {c.nama}
+                     </SelectItem>
+                   ))}
+                 </SelectContent>
               </Select>
             </div>
           </div>
@@ -339,14 +347,9 @@ export default function InventoryPage() {
                           {p.rasa}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-slate-600">
-                        <div className="flex flex-col gap-0.5">
-                          <p className="font-medium text-slate-900">{p.cabang?.nama || "-"}</p>
-                          {p.cabang?.alamat && (
-                            <p className="text-[11px] text-slate-500 leading-relaxed">{p.cabang.alamat}</p>
-                          )}
-                        </div>
-                      </TableCell>
+<TableCell className="text-sm text-slate-600">
+                         {p.cabang?.nama || "-"}{p.cabang?.alamat && <div className="text-xs text-slate-400">{p.cabang.alamat}</div>}
+                       </TableCell>
                       <TableCell>
                         <Badge
                           className={`font-medium text-[10px] ${p.stok < 20
@@ -444,17 +447,26 @@ export default function InventoryPage() {
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-700">Gambar</label>
               <div className="flex items-center gap-3 lg:gap-4">
-                <label className="cursor-pointer flex items-center gap-2 px-3 lg:px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition text-sm text-slate-600">
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChange}
-                    id="upload-file"
-                  />
-                  <ImageIcon className="h-4 w-4" />
-                  <span>Upload Gambar</span>
-                </label>
+              <label className="cursor-pointer flex items-center gap-2 px-3 lg:px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition text-sm text-slate-600">
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageChange}
+                      id="upload-file"
+                    />
+                    <ImageIcon className="h-4 w-4" />
+                    <span>Upload Gambar</span>
+                  </>
+                )}
+              </label>
               </div>
               {imagePreview && (
                 <img
@@ -474,17 +486,17 @@ export default function InventoryPage() {
                 <SelectTrigger className="h-10 border-slate-200">
                   <SelectValue placeholder="Pilih Cabang" />
                 </SelectTrigger>
-                <SelectContent>
-                  {cabang.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.nama}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+<SelectContent>
+                   {cabang.map((c) => (
+                     <SelectItem key={c.id} value={c.id}>
+                       {c.nama}
+                     </SelectItem>
+                   ))}
+                 </SelectContent>
+               </Select>
+             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
+             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700">Berat (g)</label>
                 <Input
@@ -514,11 +526,11 @@ export default function InventoryPage() {
                     <SelectTrigger className="h-10 border-slate-200 w-[120px]">
                       <SelectValue placeholder="Satuan" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pcs">Pcs</SelectItem>
-                      <SelectItem value="pack">Pack</SelectItem>
-                      <SelectItem value="box">Box</SelectItem>
-                    </SelectContent>
+                      <SelectContent>
+                        <SelectItem value="pcs">Pcs</SelectItem>
+                        <SelectItem value="pack">Pack</SelectItem>
+                        <SelectItem value="box">Box</SelectItem>
+                      </SelectContent>
                   </Select>
                 </div>
               </div>

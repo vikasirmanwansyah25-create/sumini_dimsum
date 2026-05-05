@@ -1,4 +1,4 @@
-// File: C:\Users\IMAM\Desktop\Vikas\Mencoba\app\api\bahan-baku\route.ts
+// File: C:\Users\IMAM\Desktop\Vikas\umkm\app\api\bahan-baku\route.ts
 import * as entry from '../../../../../app/api/bahan-baku/route.js'
 import type { NextRequest } from 'next/server.js'
 

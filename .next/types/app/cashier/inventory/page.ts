@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 // File: C:\Users\IMAM\Desktop\Vikas\Mencoba\app\cashier\inventory\page.tsx
+=======
+// File: C:\Users\IMAM\Desktop\Vikas\umkm\app\cashier\inventory\page.tsx
+>>>>>>> 73259c0 (first commit)
 import * as entry from '../../../../../app/cashier/inventory/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

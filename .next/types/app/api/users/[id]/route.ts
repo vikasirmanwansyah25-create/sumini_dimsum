@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 // File: C:\Users\IMAM\Desktop\Vikas\Mencoba\app\api\users\[id]\route.ts
+=======
+// File: C:\Users\IMAM\Desktop\Vikas\umkm\app\api\users\[id]\route.ts
+>>>>>>> 73259c0 (first commit)
 import * as entry from '../../../../../../app/api/users/[id]/route.js'
 import type { NextRequest } from 'next/server.js'
 

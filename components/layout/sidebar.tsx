@@ -111,6 +111,11 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <p className="text-[11px] text-white/60 mt-0.5 truncate">
             {currentUser?.nama}
           </p>
+          {!isAdmin && currentUser?.cabang?.nama && (
+            <p className="text-[10px] text-white/50 mt-0.5 truncate">
+              {currentUser.cabang.nama}
+            </p>
+          )}
         </div>
       )}
 

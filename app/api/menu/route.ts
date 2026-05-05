@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabaseClient";
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 
 function saveBase64Image(base64String: string, fileName: string): string {
   const base64Data = base64String.replace(/^data:image\/\w+;base64,/, "");
@@ -24,22 +25,20 @@ export async function GET(req: NextRequest) {
     const cabangId = searchParams.get("cabangId");
     const all = searchParams.get("all");
 
-    const where: any = {};
+let query = supabase
+       .from('Menu')
+       .select('*, cabang:Cabang!Menu_cabangId_fkey(*)');
+
     if (all !== "true") {
-      where.tersedia = true;
+      query = query.eq('tersedia', true);
     }
     if (cabangId) {
-      where.OR = [
-        { cabangId: cabangId },
-        { cabangId: null }
-      ];
+      query = query.or(`cabangId.eq.${cabangId},cabangId.is.null`);
     }
 
-    const menu = await prisma.menu.findMany({
-      where,
-      include: { cabang: true },
-      orderBy: { createdAt: "desc" },
-    });
+    const { data: menu, error } = await query.order('createdAt', { ascending: false });
+
+    if (error) throw error;
     return NextResponse.json({ success: true, data: menu });
   } catch (error) {
     console.error("GET /api/menu error:", error);
@@ -55,7 +54,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { nama, kategori, harga, hargaBeli, tersedia, gambar, deskripsi, cabangId } = body;
 
-    if (!nama || !kategori || !harga) {
+    if (!nama || !kategori || harga === undefined || harga === null || harga === '') {
       return NextResponse.json(
         { success: false, message: "Nama, kategori, dan harga wajib diisi" },
         { status: 400 }
@@ -71,25 +70,30 @@ export async function POST(req: NextRequest) {
       gambarPath = gambar;
     }
 
-    const menu = await prisma.menu.create({
-      data: {
-        nama,
-        kategori,
-        harga: Number(harga) || 0,
-        hargaBeli: hargaBeli ? Number(hargaBeli) : null,
-        tersedia: tersedia !== false,
-        gambar: gambarPath,
-        deskripsi: deskripsi || null,
-        cabangId: cabangId || null,
-      },
-      include: { cabang: true },
-    });
+const { data: menu, error } = await supabase
+       .from('Menu')
+       .insert({
+         id: crypto.randomUUID(),
+         nama,
+         kategori,
+         harga: Number(harga) || 0,
+         harga_beli: hargaBeli ? Number(hargaBeli) : null,
+         tersedia: tersedia !== false,
+         gambar: gambarPath,
+         deskripsi: deskripsi || null,
+         cabangId: cabangId || null,
+       })
+       .select('*, cabang:Cabang!Menu_cabangId_fkey(*)')
+       .single();
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true, data: menu }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("POST /api/menu error:", error);
+    const message = error?.message || error?.error_description || "Gagal menambah menu";
     return NextResponse.json(
-      { success: false, message: "Gagal menambah menu" },
+      { success: false, message },
       { status: 500 }
     );
   }

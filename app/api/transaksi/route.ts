@@ -1,39 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "../../../lib/prisma";
+import { supabase } from "../../../lib/supabaseClient";
 
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const cabangId = url.searchParams.get("cabangId");
 
-    // Build where clause
-    const whereClause: any = {};
+    let query = supabase
+      .from('Transaksi')
+      .select('*, items:CartItem(*), user:User!userId(*, cabang:Cabang!cabangId(*))')
+      .order('tanggal', { ascending: false });
+
     if (cabangId) {
-      whereClause.user = { cabangId };
+      const { data: users } = await supabase
+        .from('User')
+        .select('id')
+        .eq('cabangId', cabangId);
+
+      if (users && users.length > 0) {
+        const userIds = users.map(u => u.id);
+        query = query.in('userId', userIds);
+      }
     }
 
-    const transaksi = await prisma.transaksi.findMany({
-      where: whereClause,
-      include: { 
-        items: {
-          include: {
-            menu: true,
-          }
-        },
-        user: {
-          select: {
-            nama: true,
-            cabang: {
-              select: {
-                id: true,
-                nama: true,
-              }
-            }
-          }
-        }
-      },
-      orderBy: { tanggal: "desc" },
-    });
+    const { data: transaksi, error } = await query;
+
+    if (error) throw error;
     return NextResponse.json({ success: true, data: transaksi });
   } catch (error) {
     console.error("GET /api/transaksi error:", error);
@@ -58,11 +50,11 @@ export async function POST(req: NextRequest) {
       catatan,
       keterangan,
       buktiPembayaran,
+      tanggal,
     } = body;
 
     console.log("Received payload:", JSON.stringify(body, null, 2));
 
-    // Validate required fields
     if (!userId) {
       return NextResponse.json(
         { success: false, message: "userId is required" },
@@ -76,62 +68,73 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Build data object, only include defined optional fields
     const transaksiData: any = {
-      userId,
+      id: `TRX-${Date.now()}`,
+      userId: userId,
+      tanggal: tanggal || new Date().toISOString(),
       subtotal: Number(subtotal),
-      pajak: 0,
       total: Number(total),
-      metodePembayaran,
+      metodePembayaran: metodePembayaran,
       bayar: Number(bayar),
       kembalian: Number(kembalian),
-      items: {
-        create: items.map((item: any) => ({
-          menuId: item.menuId || item.id,
-          nama: item.nama,
-          kategori: item.kategori || "Lainnya",
-          harga: Number(item.harga),
-          jumlah: Number(item.jumlah),
-        })),
-      },
     };
 
-    // Only add optional fields if they have values
-    if (catatan !== undefined && catatan !== null && catatan !== "") {
-      transaksiData.catatan = catatan;
-    }
-    if (keterangan !== undefined && keterangan !== null && keterangan !== "") {
-      transaksiData.keterangan = keterangan;
-    }
-    if (buktiPembayaran !== undefined && buktiPembayaran !== null && buktiPembayaran !== "") {
-      transaksiData.buktiPembayaran = buktiPembayaran;
-    }
+    if (catatan) transaksiData.catatan = catatan;
+    if (keterangan) transaksiData.keterangan = keterangan;
+    if (buktiPembayaran) transaksiData.buktiPembayaran = buktiPembayaran;
 
-    console.log("Creating transaction with data:", JSON.stringify(transaksiData, null, 2));
+    const { data: transaksi, error } = await supabase
+      .from('Transaksi')
+      .insert(transaksiData)
+      .select()
+      .single();
 
-    const transaksi = await prisma.transaksi.create({
-      data: transaksiData,
-      include: { items: true },
-    });
+    if (error) throw error;
+
+    const cartItems = items.map((item: any) => ({
+      id: `CI-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      transaksiId: transaksi.id,
+      menuId: item.menuId || item.id,
+      nama: item.nama,
+      kategori: item.kategori || "Lainnya",
+      harga: Number(item.harga),
+      jumlah: Number(item.jumlah),
+    }));
+
+    const { error: itemsError } = await supabase
+      .from('CartItem')
+      .insert(cartItems);
+
+    if (itemsError) throw itemsError;
 
     for (const item of items) {
-      const mid = item.menuId || item.id;
+      const menuId = item.menuId || item.id;
 
-      // Kurangi stok bahan baku berdasarkan resep
-      const reseps = await prisma.resep.findMany({
-        where: { menuId: mid },
-        include: { bahanBaku: true },
-      });
+      const { data: reseps } = await supabase
+        .from('Resep')
+        .select('*, BahanBaku!bahanBakuId(*)')
+        .eq('menuId', menuId);
 
-      for (const resep of reseps) {
-        await prisma.bahanBaku.update({
-          where: { id: resep.bahanBakuId },
-          data: { stok: { decrement: resep.jumlah * item.jumlah } },
-        });
+      if (reseps) {
+        for (const resep of reseps) {
+          const newStok = resep.BahanBaku.stok - (resep.jumlah * item.jumlah);
+          const { error: updateError } = await supabase
+            .from('BahanBaku')
+            .update({ stok: newStok })
+            .eq('id', resep.bahanBakuId);
+
+          if (updateError) throw updateError;
+        }
       }
     }
 
-    return NextResponse.json({ success: true, data: transaksi });
+    const { data: fullTransaksi } = await supabase
+      .from('Transaksi')
+      .select('*, items:CartItem(*)')
+      .eq('id', transaksi.id)
+      .single();
+
+    return NextResponse.json({ success: true, data: fullTransaksi });
   } catch (error: any) {
     console.error("POST /api/transaksi error:", error);
     console.error("Error details:", error.message);
@@ -142,4 +145,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

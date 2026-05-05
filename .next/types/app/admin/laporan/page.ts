@@ -1,4 +1,4 @@
-// File: C:\Users\IMAM\Desktop\Vikas\Mencoba\app\admin\laporan\page.tsx
+// File: C:\Users\IMAM\Desktop\Vikas\umkm\app\admin\laporan\page.tsx
 import * as entry from '../../../../../app/admin/laporan/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

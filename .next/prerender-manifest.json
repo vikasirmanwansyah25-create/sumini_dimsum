@@ -26,6 +26,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
+<<<<<<< HEAD
     "/admin/cabang": {
       "experimentalBypassFor": [
         {
@@ -74,6 +75,8 @@
         "x-next-revalidate-tag-token"
       ]
     },
+=======
+>>>>>>> 73259c0 (first commit)
     "/": {
       "experimentalBypassFor": [
         {
@@ -98,7 +101,11 @@
         "x-next-revalidate-tag-token"
       ]
     },
+<<<<<<< HEAD
     "/admin/laporan": {
+=======
+    "/admin/users": {
+>>>>>>> 73259c0 (first commit)
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -111,8 +118,13 @@
         }
       ],
       "initialRevalidateSeconds": false,
+<<<<<<< HEAD
       "srcRoute": "/admin/laporan",
       "dataRoute": "/admin/laporan.rsc",
+=======
+      "srcRoute": "/admin/users",
+      "dataRoute": "/admin/users.rsc",
+>>>>>>> 73259c0 (first commit)
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -122,7 +134,11 @@
         "x-next-revalidate-tag-token"
       ]
     },
+<<<<<<< HEAD
     "/admin/inventory": {
+=======
+    "/admin/cabang": {
+>>>>>>> 73259c0 (first commit)
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -135,8 +151,37 @@
         }
       ],
       "initialRevalidateSeconds": false,
+<<<<<<< HEAD
       "srcRoute": "/admin/inventory",
       "dataRoute": "/admin/inventory.rsc",
+=======
+      "srcRoute": "/admin/cabang",
+      "dataRoute": "/admin/cabang.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
+    "/admin/produk": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "next-action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/admin/produk",
+      "dataRoute": "/admin/produk.rsc",
+>>>>>>> 73259c0 (first commit)
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -170,6 +215,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
+<<<<<<< HEAD
     "/cashier/transaksi": {
       "experimentalBypassFor": [
         {
@@ -194,6 +240,8 @@
         "x-next-revalidate-tag-token"
       ]
     },
+=======
+>>>>>>> 73259c0 (first commit)
     "/cashier/riwayat": {
       "experimentalBypassFor": [
         {
@@ -242,7 +290,11 @@
         "x-next-revalidate-tag-token"
       ]
     },
+<<<<<<< HEAD
     "/cashier": {
+=======
+    "/cashier/transaksi": {
+>>>>>>> 73259c0 (first commit)
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -255,8 +307,61 @@
         }
       ],
       "initialRevalidateSeconds": false,
+<<<<<<< HEAD
       "srcRoute": "/cashier",
       "dataRoute": "/cashier.rsc",
+=======
+      "srcRoute": "/cashier/transaksi",
+      "dataRoute": "/cashier/transaksi.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
+    "/admin/inventory": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "next-action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/admin/inventory",
+      "dataRoute": "/admin/inventory.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
+    "/admin/laporan": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "next-action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/admin/laporan",
+      "dataRoute": "/admin/laporan.rsc",
+>>>>>>> 73259c0 (first commit)
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -290,7 +395,11 @@
         "x-next-revalidate-tag-token"
       ]
     },
+<<<<<<< HEAD
     "/admin/produk": {
+=======
+    "/cashier": {
+>>>>>>> 73259c0 (first commit)
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -303,8 +412,13 @@
         }
       ],
       "initialRevalidateSeconds": false,
+<<<<<<< HEAD
       "srcRoute": "/admin/produk",
       "dataRoute": "/admin/produk.rsc",
+=======
+      "srcRoute": "/cashier",
+      "dataRoute": "/cashier.rsc",
+>>>>>>> 73259c0 (first commit)
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -318,8 +432,14 @@
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
+<<<<<<< HEAD
     "previewModeId": "f77e1572bf49c2077ad88d2d1ce1bc20",
     "previewModeSigningKey": "1be59311bb42a3ed1557c6cedcfc72243ca19c6bf94b58d14e1c047b33671ad0",
     "previewModeEncryptionKey": "7f46262027fd4d275089a3acdab70cb83404775fcd8bb2d12f0142439f1c3aa8"
+=======
+    "previewModeId": "9d1b22944dde461705dcffff3c0a60fa",
+    "previewModeSigningKey": "f36133df9657a417b3b090a48609694a576334c9d3a2fd76328db862fa463c3b",
+    "previewModeEncryptionKey": "063bfb2159b23aaf40b42c602c7ce0c921bcce03baab3294a6b0cb24b253c6ef"
+>>>>>>> 73259c0 (first commit)
   }
 }

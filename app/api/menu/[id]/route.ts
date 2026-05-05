@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabaseClient";
 import fs from "fs";
 import path from "path";
 
@@ -27,7 +27,12 @@ export async function PUT(
     const body = await req.json();
     const { nama, kategori, harga, hargaBeli, tersedia, gambar, deskripsi, cabangId } = body;
 
-    const existing = await prisma.menu.findUnique({ where: { id } });
+    const { data: existing, error: checkError } = await supabase
+      .from('Menu')
+      .select('gambar')
+      .eq('id', id)
+      .single();
+
     if (!existing) {
       return NextResponse.json(
         { success: false, message: "Menu tidak ditemukan" },
@@ -46,20 +51,24 @@ export async function PUT(
       gambarPath = gambar;
     }
 
-    const menu = await prisma.menu.update({
-      where: { id },
-      data: {
-        nama,
-        kategori,
-        harga: Number(harga) || 0,
-        hargaBeli: hargaBeli ? Number(hargaBeli) : null,
-        tersedia,
-        gambar: gambarPath,
-        deskripsi: deskripsi || null,
-        cabangId: cabangId !== undefined ? cabangId : existing.cabangId,
-      },
-      include: { cabang: true },
-    });
+    const updateData: any = {};
+    if (nama !== undefined) updateData.nama = nama;
+    if (kategori !== undefined) updateData.kategori = kategori;
+    if (harga !== undefined) updateData.harga = Number(harga) || 0;
+    if (hargaBeli !== undefined) updateData.harga_beli = hargaBeli ? Number(hargaBeli) : null;
+    if (tersedia !== undefined) updateData.tersedia = tersedia;
+    if (gambarPath !== undefined) updateData.gambar = gambarPath;
+    if (deskripsi !== undefined) updateData.deskripsi = deskripsi;
+    if (cabangId !== undefined) updateData.cabangId = cabangId;
+
+    const { data: menu, error } = await supabase
+      .from('Menu')
+      .update(updateData)
+      .eq('id', id)
+      .select('*, Cabang!Menu_cabangId_fkey(*)')
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true, data: menu });
   } catch (error) {
@@ -78,7 +87,12 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const existing = await prisma.menu.findUnique({ where: { id } });
+    const { data: existing, error: checkError } = await supabase
+      .from('Menu')
+      .select('id')
+      .eq('id', id)
+      .single();
+
     if (!existing) {
       return NextResponse.json(
         { success: false, message: "Menu tidak ditemukan" },
@@ -86,7 +100,12 @@ export async function DELETE(
       );
     }
 
-    await prisma.menu.delete({ where: { id } });
+    const { error } = await supabase
+      .from('Menu')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true, message: "Menu berhasil dihapus" });
   } catch (error) {

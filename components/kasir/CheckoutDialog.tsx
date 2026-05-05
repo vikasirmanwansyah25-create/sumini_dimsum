@@ -317,51 +317,6 @@ export function CheckoutDialog({
                     ))}
                   </div>
 
-                  {/* Upload Bukti Tunai */}
-                  <div className="space-y-2 pt-2">
-                    <label className="text-sm font-medium text-slate-700">
-                      Bukti Pembayaran <span className="text-slate-400">(opsional)</span>
-                    </label>
-                    {buktiPembayaran ? (
-                      <div className="relative rounded-xl border border-slate-200 overflow-hidden">
-                        <img
-                          src={buktiPembayaran}
-                          alt="Bukti pembayaran"
-                          className="w-full h-48 object-contain bg-slate-50"
-                        />
-                        <button
-                          onClick={removeBukti}
-                          className="absolute top-2 right-2 p-1.5 rounded-lg bg-rose-500 text-white hover:bg-rose-600 transition-colors"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-2">
-                        <label className="flex flex-col items-center justify-center flex-1 h-24 rounded-xl border-2 border-dashed border-slate-300 hover:border-[#4A776E] hover:bg-[#4A776E]/10/30 transition-all cursor-pointer">
-                          <Upload className="h-6 w-6 text-slate-400 mb-1" />
-                          <p className="text-xs text-slate-500">Upload File</p>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                          />
-                        </label>
-                        <label className="flex flex-col items-center justify-center flex-1 h-24 rounded-xl border-2 border-dashed border-slate-300 hover:border-[#4A776E] hover:bg-[#4A776E]/10/30 transition-all cursor-pointer">
-                          <Camera className="h-6 w-6 text-slate-400 mb-1" />
-                          <p className="text-xs text-slate-500">Camera</p>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
-                    )}
-                  </div>
                 </div>
               )}
 

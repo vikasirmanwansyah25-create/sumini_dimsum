@@ -59,8 +59,17 @@ export default function UsersPage() {
   const fetchCabang = async () => {
     try {
       const res = await fetch("/api/cabang");
-      const data = await res.json();
-      setCabangList(data.data || []);
+      if (!res.ok) {
+        console.error("Failed to fetch cabang, status:", res.status);
+        return;
+      }
+      const json = await res.json();
+      console.log("Cabang response:", json);
+      const list = json.data || json.cabang || [];
+      setCabangList(list);
+      if (list.length === 0) {
+        console.warn("No cabang data found. Please add branches first.");
+      }
     } catch (err) {
       console.error("Gagal mengambil data cabang", err);
     }
@@ -99,7 +108,7 @@ export default function UsersPage() {
     }
 
     if (formData.role === "KASIR" && !formData.cabangId) {
-      alert("Mohon pilih cabang untuk kasir");
+      alert("Mohon pilih cabang untuk kasir. Jika belum ada cabang, tambahkan terlebih dahulu di menu Cabang.");
       return;
     }
 
@@ -112,8 +121,8 @@ export default function UsersPage() {
         await addUser(formData);
       }
       setIsDialogOpen(false);
-    } catch (err) {
-      alert("Gagal menyimpan user");
+    } catch (err: any) {
+      alert(err.message || "Gagal menyimpan user");
     }
     setIsLoading(false);
   };
@@ -125,8 +134,8 @@ export default function UsersPage() {
         await deleteUser(selectedUserId);
         setIsDeleteDialogOpen(false);
         setSelectedUserId(null);
-      } catch (err) {
-        alert("Gagal menghapus user");
+      } catch (err: any) {
+        alert(err.message || "Gagal menghapus user");
       }
       setIsLoading(false);
     }
@@ -198,8 +207,8 @@ export default function UsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
+              {users.map((user, index) => (
+                <TableRow key={user.id || `user-${index}`}>
                   <TableCell className="font-medium">
                     @{user.username}
                   </TableCell>
@@ -309,23 +318,29 @@ export default function UsersPage() {
             {formData.role === "KASIR" && (
               <div className="space-y-2">
                 <label className="text-sm font-medium">Cabang</label>
-                <Select
-                  value={formData.cabangId}
-                  onValueChange={(val) =>
-                    setFormData({ ...formData, cabangId: val })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih Cabang" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cabangList.map((cabang) => (
-                      <SelectItem key={cabang.id} value={cabang.id}>
-                        {cabang.nama}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {cabangList.length === 0 ? (
+                  <div className="text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
+                    Belum ada data cabang. Silakan tambahkan cabang terlebih dahulu di menu Cabang.
+                  </div>
+                ) : (
+                  <Select
+                    value={formData.cabangId || ""}
+                    onValueChange={(val) =>
+                      setFormData({ ...formData, cabangId: val })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih Cabang" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cabangList.map((cabang) => (
+                        <SelectItem key={cabang.id} value={cabang.id}>
+                          {cabang.nama}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             )}
           </div>
