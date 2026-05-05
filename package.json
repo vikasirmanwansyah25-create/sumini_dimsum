@@ -3,13 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-<<<<<<< HEAD
     "dev": "next dev",
-    "build": "prisma generate && next build",
-=======
-    "dev": "next dev -p 3001",
     "build": "next build",
->>>>>>> 73259c0 (first commit)
     "start": "next start",
     "lint": "next lint"
   },
