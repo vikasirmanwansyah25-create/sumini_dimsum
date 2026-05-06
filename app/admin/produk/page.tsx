@@ -75,6 +75,7 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
   });
   const [imagePreview, setImagePreview] = React.useState<string>("");
   const [uploading, setUploading] = React.useState(false);
+  const [showImagePreview, setShowImagePreview] = React.useState(false);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -170,8 +171,28 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
   });
 
   const handleSave = async () => {
-    if (!formData.nama || !formData.kategori || !formData.harga) {
-      alert("Nama, kategori, dan harga wajib diisi");
+    if (!formData.nama.trim()) {
+      alert("Nama produk wajib diisi");
+      return;
+    }
+
+    if (!formData.kategori) {
+      alert("Kategori wajib dipilih");
+      return;
+    }
+
+    if (!formData.cabangId) {
+      alert("Cabang wajib dipilih");
+      return;
+    }
+
+    if (formData.harga <= 0) {
+      alert("Harga jual harus lebih dari 0");
+      return;
+    }
+
+    if (formData.hargaBeli && formData.hargaBeli < 0) {
+      alert("Harga beli tidak boleh negatif");
       return;
     }
 
@@ -319,7 +340,11 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                           <img
                             src={p.gambar}
                             alt={p.nama}
-                            className="h-10 w-10 rounded-lg object-cover border border-slate-100"
+                            className="h-10 w-10 rounded-lg object-cover border border-slate-100 cursor-pointer hover:opacity-80 transition"
+                            onClick={() => {
+                              setImagePreview(p.gambar || "");
+                              setShowImagePreview(true);
+                            }}
                           />
                         ) : (
                           <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center">
@@ -493,7 +518,8 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                 <img
                   src={imagePreview}
                   alt="Preview"
-                  className="h-12 lg:h-14 w-12 lg:w-14 rounded-lg object-cover border border-slate-100"
+                  className="h-12 lg:h-14 w-12 lg:w-14 rounded-lg object-cover border border-slate-100 cursor-pointer hover:opacity-80 transition"
+                  onClick={() => setShowImagePreview(true)}
                 />
               )}
             </div>
@@ -540,35 +566,51 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Hapus */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="max-w-sm sm:max-w-md border-slate-200">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-slate-900">
-              Konfirmasi Hapus
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-3 lg:py-4">
-            <p className="text-slate-600 text-sm">
-              Apakah Anda yakin ingin menghapus produk{" "}
-              <span className="font-semibold text-slate-900">{selectedProduk?.nama}</span>?
-              Tindakan ini tidak dapat dibatalkan.
-            </p>
-          </div>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-              className="border-slate-200"
-            >
-              Batal
-            </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Hapus
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+       {/* Dialog Hapus */}
+       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+         <DialogContent className="max-w-sm sm:max-w-md border-slate-200">
+           <DialogHeader>
+             <DialogTitle className="text-lg font-semibold text-slate-900">
+               Konfirmasi Hapus
+             </DialogTitle>
+           </DialogHeader>
+           <div className="py-3 lg:py-4">
+             <p className="text-slate-600 text-sm">
+               Apakah Anda yakin ingin menghapus produk{" "}
+               <span className="font-semibold text-slate-900">{selectedProduk?.nama}</span>?
+               Tindakan ini tidak dapat dibatalkan.
+             </p>
+           </div>
+           <DialogFooter className="flex flex-col sm:flex-row gap-2">
+             <Button
+               variant="outline"
+               onClick={() => setIsDeleteDialogOpen(false)}
+               className="border-slate-200"
+             >
+               Batal
+             </Button>
+             <Button variant="destructive" onClick={handleDelete}>
+               Hapus
+             </Button>
+           </DialogFooter>
+         </DialogContent>
+       </Dialog>
+
+       {/* Dialog Preview Gambar */}
+       <Dialog open={showImagePreview} onOpenChange={setShowImagePreview}>
+         <DialogContent className="max-w-2xl sm:max-w-3xl border-slate-200 p-2">
+           <DialogHeader>
+             <DialogTitle className="sr-only">Preview Gambar</DialogTitle>
+           </DialogHeader>
+           <div className="relative">
+             <img
+               src={imagePreview}
+               alt="Preview"
+               className="w-full h-auto rounded-lg"
+             />
+           </div>
+         </DialogContent>
+       </Dialog>
+     </div>
+   );
+ }

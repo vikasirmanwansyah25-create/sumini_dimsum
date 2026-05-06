@@ -71,7 +71,7 @@ export default function CashierInventoryPage() {
     stok: 0,
     gambar: "",
     deskripsi: "",
-    jenisProduk: "Makanan",
+    jenisProduk: "Frozen Food",
     satuan: "pcs",
   });
   const [imagePreview, setImagePreview] = React.useState<string>("");
@@ -104,9 +104,11 @@ export default function CashierInventoryPage() {
   });
 
   const totalStok = filteredBahan.reduce((acc, item) => acc + item.stok, 0);
-  const makananCount = filteredBahan.filter(item => item.jenisProduk === "Makanan").length;
-  const minumanCount = filteredBahan.filter(item => item.jenisProduk === "Minuman").length;
-  const barangCount = filteredBahan.filter(item => item.jenisProduk === "Barang").length;
+  const frozenFoodCount = filteredBahan.filter(item => item.jenisProduk === "Frozen Food").length;
+  const toppingCount = filteredBahan.filter(item => item.jenisProduk === "Topping").length;
+  const pengemasanCount = filteredBahan.filter(item => item.jenisProduk === "Pengemasan").length;
+  const operasionalCount = filteredBahan.filter(item => item.jenisProduk === "Operasional").length;
+  const penyedapCount = filteredBahan.filter(item => item.jenisProduk === "Penyedap").length;
 
   const handleOpenDialog = (p?: BahanBaku) => {
     if (p) {
@@ -131,7 +133,7 @@ export default function CashierInventoryPage() {
         stok: 0,
         gambar: "",
         deskripsi: "",
-        jenisProduk: "Makanan",
+        jenisProduk: "Frozen Food",
         satuan: "pcs",
       });
       setImagePreview("");
@@ -140,7 +142,7 @@ export default function CashierInventoryPage() {
   };
 
   const handleJenisChange = (jenis: string) => {
-    setFormData({ ...formData, jenisProduk: jenis, rasa: jenis === "Barang" ? "" : formData.rasa });
+    setFormData({ ...formData, jenisProduk: jenis, rasa: ["Pengemasan", "Operasional"].includes(jenis) ? "" : formData.rasa });
   };
 
   const [uploading, setUploading] = React.useState(false);
@@ -173,13 +175,45 @@ export default function CashierInventoryPage() {
   };
 
   const handleSave = async () => {
-    if (!formData.nama) {
-      alert("Nama produk wajib diisi");
+    // Validasi nama wajib diisi
+    if (!formData.nama.trim()) {
+      alert("Nama bahan wajib diisi");
       return;
     }
 
-    if (formData.jenisProduk === "Makanan" && !formData.rasa) {
-      alert("Rasa wajib diisi untuk jenis Makanan");
+    // Validasi rasa wajib untuk Frozen Food dan Topping
+    if (["Frozen Food", "Topping"].includes(formData.jenisProduk) && !formData.rasa?.trim()) {
+      alert("Rasa wajib diisi untuk jenis " + formData.jenisProduk);
+      return;
+    }
+
+    // Validasi gambar wajib diupload
+    if (!formData.gambar) {
+      alert("Gambar wajib diupload");
+      return;
+    }
+
+    // Validasi berat harus lebih dari 0
+    if (!formData.berat || formData.berat <= 0) {
+      alert("Berat harus diisi dan lebih dari 0");
+      return;
+    }
+
+    // Validasi stok wajib diisi dan tidak boleh negatif
+    if (formData.stok === undefined || formData.stok === null || formData.stok < 0) {
+      alert("Stok wajib diisi dan tidak boleh negatif");
+      return;
+    }
+
+    // Validasi satuan wajib dipilih
+    if (!formData.satuan) {
+      alert("Satuan wajib dipilih");
+      return;
+    }
+
+    // Validasi deskripsi wajib diisi
+    if (!formData.deskripsi?.trim()) {
+      alert("Deskripsi wajib diisi");
       return;
     }
 
@@ -278,61 +312,74 @@ export default function CashierInventoryPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-3 lg:gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Package className="h-4 w-4 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500">Total Bahan</p>
-                <p className="text-lg font-bold text-slate-800">{filteredBahan.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Package className="h-4 w-4 text-green-600" />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500">Makanan</p>
-                <p className="text-lg font-bold text-slate-800">{makananCount}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Package className="h-4 w-4 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500">Minuman</p>
-                <p className="text-lg font-bold text-slate-800">{minumanCount}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Package className="h-4 w-4 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500">Barang</p>
-                <p className="text-lg font-bold text-slate-800">{barangCount}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+       {/* Stats Cards */}
+       <div className="grid gap-3 lg:gap-4 grid-cols-2 lg:grid-cols-5">
+         <Card>
+           <CardContent className="p-4">
+             <div className="flex items-center gap-2">
+               <div className="p-2 bg-blue-100 rounded-lg">
+                 <Package className="h-4 w-4 text-blue-600" />
+               </div>
+               <div>
+                 <p className="text-xs text-slate-500">Total Bahan</p>
+                 <p className="text-lg font-bold text-slate-800">{filteredBahan.length}</p>
+               </div>
+             </div>
+           </CardContent>
+         </Card>
+         <Card>
+           <CardContent className="p-4">
+             <div className="flex items-center gap-2">
+               <div className="p-2 bg-green-100 rounded-lg">
+                 <Package className="h-4 w-4 text-green-600" />
+               </div>
+               <div>
+                 <p className="text-xs text-slate-500">Frozen Food</p>
+                 <p className="text-lg font-bold text-slate-800">{frozenFoodCount}</p>
+               </div>
+             </div>
+           </CardContent>
+         </Card>
+         <Card>
+           <CardContent className="p-4">
+             <div className="flex items-center gap-2">
+               <div className="p-2 bg-purple-100 rounded-lg">
+                 <Package className="h-4 w-4 text-purple-600" />
+               </div>
+               <div>
+                 <p className="text-xs text-slate-500">Topping</p>
+                 <p className="text-lg font-bold text-slate-800">{toppingCount}</p>
+               </div>
+             </div>
+           </CardContent>
+         </Card>
+         <Card>
+           <CardContent className="p-4">
+             <div className="flex items-center gap-2">
+               <div className="p-2 bg-orange-100 rounded-lg">
+                 <Package className="h-4 w-4 text-orange-600" />
+               </div>
+               <div>
+                 <p className="text-xs text-slate-500">Pengemasan</p>
+                 <p className="text-lg font-bold text-slate-800">{pengemasanCount}</p>
+               </div>
+             </div>
+           </CardContent>
+         </Card>
+         <Card>
+           <CardContent className="p-4">
+             <div className="flex items-center gap-2">
+               <div className="p-2 bg-gray-100 rounded-lg">
+                 <Package className="h-4 w-4 text-gray-600" />
+               </div>
+               <div>
+                 <p className="text-xs text-slate-500">Operasional</p>
+                 <p className="text-lg font-bold text-slate-800">{operasionalCount}</p>
+               </div>
+             </div>
+           </CardContent>
+         </Card>
+       </div>
 
       {/* Search */}
       <Card>
@@ -398,11 +445,15 @@ export default function CashierInventoryPage() {
                         <Badge
                           variant="outline"
                           className={
-                            item.jenisProduk === "Makanan"
+                            item.jenisProduk === "Frozen Food"
                               ? "border-green-200 text-green-700 bg-green-50"
-                              : item.jenisProduk === "Minuman"
+                              : item.jenisProduk === "Topping"
+                              ? "border-purple-200 text-purple-700 bg-purple-50"
+                              : item.jenisProduk === "Pengemasan"
                               ? "border-blue-200 text-blue-700 bg-blue-50"
-                              : "border-gray-200 text-gray-700 bg-gray-50"
+                              : item.jenisProduk === "Operasional"
+                              ? "border-gray-200 text-gray-700 bg-gray-50"
+                              : "border-yellow-200 text-yellow-700 bg-yellow-50"
                           }
                         >
                           {item.jenisProduk}
@@ -478,23 +529,25 @@ export default function CashierInventoryPage() {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Makanan">Makanan</SelectItem>
-                  <SelectItem value="Minuman">Minuman</SelectItem>
-                  <SelectItem value="Barang">Barang</SelectItem>
-                </SelectContent>
+                 <SelectContent>
+                   <SelectItem value="Frozen Food">Frozen Food</SelectItem>
+                   <SelectItem value="Topping">Topping</SelectItem>
+                   <SelectItem value="Pengemasan">Pengemasan</SelectItem>
+                   <SelectItem value="Operasional">Operasional</SelectItem>
+                   <SelectItem value="Penyedap">Penyedap</SelectItem>
+                 </SelectContent>
               </Select>
             </div>
-            {formData.jenisProduk !== "Barang" && (
-              <div>
-                <label className="text-sm font-medium">Rasa</label>
-                <Input
-                  value={formData.rasa}
-                  onChange={(e) => setFormData({ ...formData, rasa: e.target.value })}
-                  placeholder="Rasa produk"
-                />
-              </div>
-            )}
+            {!["Pengemasan", "Operasional"].includes(formData.jenisProduk) && (
+               <div>
+                 <label className="text-sm font-medium">Rasa</label>
+                 <Input
+                   value={formData.rasa}
+                   onChange={(e) => setFormData({ ...formData, rasa: e.target.value })}
+                   placeholder="Rasa produk"
+                 />
+               </div>
+             )}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">Berat (g)</label>
@@ -519,11 +572,16 @@ export default function CashierInventoryPage() {
                     <SelectTrigger className="w-[120px]">
                       <SelectValue placeholder="Satuan" />
                     </SelectTrigger>
-                     <SelectContent>
-                        <SelectItem value="pcs">Pcs</SelectItem>
-                        <SelectItem value="pack">Pack</SelectItem>
-                        <SelectItem value="box">Box</SelectItem>
-                      </SelectContent>
+                      <SelectContent>
+                         <SelectItem value="pcs">Pcs</SelectItem>
+                         <SelectItem value="box">Box</SelectItem>
+                         <SelectItem value="pack">Pack</SelectItem>
+                         <SelectItem value="tabung">Tabung</SelectItem>
+                         <SelectItem value="galon">Galon</SelectItem>
+                         <SelectItem value="set">Set</SelectItem>
+                         <SelectItem value="roll">Roll</SelectItem>
+                         <SelectItem value="botol">Botol</SelectItem>
+                       </SelectContent>
                   </Select>
                 </div>
               </div>

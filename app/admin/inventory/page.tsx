@@ -94,25 +94,26 @@ export default function InventoryPage() {
     stok: 0,
     gambar: "",
     deskripsi: "",
-    jenisProduk: "Makanan",
+    jenisProduk: "Frozen Food",
     cabangId: "",
     satuan: "pcs",
   });
   const [imagePreview, setImagePreview] = React.useState<string>("");
   const [uploading, setUploading] = React.useState(false);
+  const [showImagePreview, setShowImagePreview] = React.useState(false);
 
   const handleOpenDialog = (p?: BahanBaku) => {
     if (p) {
       setSelectedBahan(p);
       setFormData({
-        nama: p.nama,
+        nama: p.nama || "",
         rasa: p.rasa || "",
-        berat: p.berat,
-        stok: p.stok,
+        berat: p.berat || 150,
+        stok: p.stok || 0,
         gambar: p.gambar || "",
         deskripsi: p.deskripsi || "",
         jenisProduk: p.jenisProduk || "Makanan",
-        cabangId: p.cabangId,
+        cabangId: p.cabangId || "",
         satuan: (p as any).satuan || "pcs",
       });
       setImagePreview(p.gambar || "");
@@ -125,7 +126,7 @@ export default function InventoryPage() {
         stok: 0,
         gambar: "",
         deskripsi: "",
-        jenisProduk: "Makanan",
+        jenisProduk: "Frozen Food",
         cabangId: (filterCabang && filterCabang !== "all") ? filterCabang : (cabang[0]?.id || ""),
         satuan: "pcs",
       });
@@ -135,7 +136,7 @@ export default function InventoryPage() {
   };
 
   const handleJenisChange = (jenis: string) => {
-    setFormData({ ...formData, jenisProduk: jenis, rasa: jenis === "Barang" ? "" : formData.rasa });
+    setFormData({ ...formData, jenisProduk: jenis, rasa: ["Pengemasan", "Operasional"].includes(jenis) ? "" : formData.rasa });
   };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -174,24 +175,63 @@ export default function InventoryPage() {
   });
 
   const handleSave = async () => {
-    if (!formData.nama || !formData.cabangId) {
-      alert("Mohon lengkapi field utama (nama dan cabang)");
+    // Validasi nama wajib diisi
+    if (!formData.nama.trim()) {
+      alert("Nama bahan wajib diisi");
       return;
     }
 
-    // Validasi rasa wajib untuk Makanan dan Minuman
-    if ((formData.jenisProduk === "Makanan" || formData.jenisProduk === "Minuman") && !formData.rasa) {
-      alert("Mohon lengkapi field rasa untuk jenis " + formData.jenisProduk);
+    // Validasi cabang wajib dipilih (hanya untuk tambah baru)
+    if (!selectedBahan && !formData.cabangId) {
+      alert("Cabang wajib dipilih");
       return;
     }
 
-    setSaving(true);
+    // Validasi rasa wajib untuk Frozen Food dan Topping
+    if (["Frozen Food", "Topping"].includes(formData.jenisProduk) && !formData.rasa?.trim()) {
+      alert("Rasa wajib diisi untuk jenis " + formData.jenisProduk);
+      return;
+    }
+
+    // Validasi gambar wajib diupload
+    if (!formData.gambar) {
+      alert("Gambar wajib diupload");
+      return;
+    }
+
+    // Validasi berat harus lebih dari 0
+    if (!formData.berat || formData.berat <= 0) {
+      alert("Berat harus diisi dan lebih dari 0");
+      return;
+    }
+
+    // Validasi stok wajib diisi dan tidak boleh negatif
+    if (formData.stok === undefined || formData.stok === null || formData.stok < 0) {
+      alert("Stok wajib diisi dan tidak boleh negatif");
+      return;
+    }
+
+    // Validasi satuan wajib dipilih
+    if (!formData.satuan) {
+      alert("Satuan wajib dipilih");
+      return;
+    }
+
+    // Validasi deskripsi wajib diisi
+    if (!formData.deskripsi?.trim()) {
+      alert("Deskripsi wajib diisi");
+      return;
+    }
+
+     setSaving(true);
     try {
       if (selectedBahan) {
+        // Jangan kirim cabangId saat update karena tidak boleh diubah
+        const { cabangId, ...updateData } = formData;
         const res = await fetch(`/api/bahan-baku/${selectedBahan.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(updateData),
         });
         const json = await res.json();
         if (json.success) {
@@ -296,15 +336,16 @@ export default function InventoryPage() {
           <div className="overflow-auto border border-slate-100 rounded-xl">
             <Table>
               <TableHeader>
-                <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
-                  <TableHead className="w-[80px] text-xs font-semibold text-slate-600">Gambar</TableHead>
-                  <TableHead className="text-xs font-semibold text-slate-600">Nama Bahan</TableHead>
-                  <TableHead className="text-xs font-semibold text-slate-600">Rasa</TableHead>
-                  <TableHead className="text-xs font-semibold text-slate-600">Cabang</TableHead>
-                  <TableHead className="text-xs font-semibold text-slate-600">Stok</TableHead>
-                  <TableHead className="text-xs font-semibold text-slate-600">Berat</TableHead>
-                  <TableHead className="text-xs font-semibold text-slate-600">Aksi</TableHead>
-                </TableRow>
+                 <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
+                   <TableHead className="w-[80px] text-xs font-semibold text-slate-600">Gambar</TableHead>
+                   <TableHead className="text-xs font-semibold text-slate-600">Nama Bahan</TableHead>
+                   <TableHead className="text-xs font-semibold text-slate-600">Rasa</TableHead>
+                   <TableHead className="text-xs font-semibold text-slate-600">Jenis</TableHead>
+                   <TableHead className="text-xs font-semibold text-slate-600">Cabang</TableHead>
+                   <TableHead className="text-xs font-semibold text-slate-600">Stok</TableHead>
+                   <TableHead className="text-xs font-semibold text-slate-600">Berat</TableHead>
+                   <TableHead className="text-xs font-semibold text-slate-600">Aksi</TableHead>
+                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
@@ -326,14 +367,18 @@ export default function InventoryPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredBahan.map((p) => (
+                   filteredBahan.map((p) => (
                     <TableRow key={p.id} className="hover:bg-slate-50/50 transition-colors">
                       <TableCell>
                         {p.gambar ? (
                           <img
                             src={p.gambar}
                             alt={p.nama}
-                            className="h-10 w-10 rounded-lg object-cover border border-slate-100"
+                            className="h-10 w-10 rounded-lg object-cover border border-slate-100 cursor-pointer hover:opacity-80 transition"
+                            onClick={() => {
+                              setImagePreview(p.gambar || "");
+                              setShowImagePreview(true);
+                            }}
                           />
                         ) : (
                           <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center">
@@ -342,14 +387,46 @@ export default function InventoryPage() {
                         )}
                       </TableCell>
                       <TableCell className="font-medium text-sm text-slate-900">{p.nama}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="bg-slate-100 text-slate-700 font-medium text-[10px]">
-                          {p.rasa}
-                        </Badge>
-                      </TableCell>
-<TableCell className="text-sm text-slate-600">
-                         {p.cabang?.nama || "-"}{p.cabang?.alamat && <div className="text-xs text-slate-400">{p.cabang.alamat}</div>}
+                       <TableCell>
+                         <Badge
+                           variant="secondary"
+                           className="bg-slate-100 text-slate-700 font-medium text-[10px]"
+                         >
+                           {p.rasa}
+                         </Badge>
                        </TableCell>
+                       <TableCell>
+                         <Badge
+                           variant="outline"
+                           className={
+                             p.jenisProduk === "Frozen Food"
+                               ? "border-green-200 text-green-700 bg-green-50"
+                               : p.jenisProduk === "Topping"
+                               ? "border-purple-200 text-purple-700 bg-purple-50"
+                               : p.jenisProduk === "Pengemasan"
+                               ? "border-blue-200 text-blue-700 bg-blue-50"
+                               : p.jenisProduk === "Operasional"
+                               ? "border-gray-200 text-gray-700 bg-gray-50"
+                               : "border-yellow-200 text-yellow-700 bg-yellow-50"
+                           }
+                         >
+                           {p.jenisProduk}
+                         </Badge>
+                       </TableCell>
+<TableCell className="text-sm text-slate-600">
+                          {(p.cabang?.nama || cabang.find(c => c.id === p.cabangId)?.nama) ? (
+                            <div>
+                              <div>{p.cabang?.nama || cabang.find(c => c.id === p.cabangId)?.nama}</div>
+                              {(p.cabang?.alamat || cabang.find(c => c.id === p.cabangId)?.alamat) && (
+                                <div className="text-xs text-slate-400">
+                                  {p.cabang?.alamat || cabang.find(c => c.id === p.cabangId)?.alamat}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-yellow-600 text-xs">Cabang tidak ditemukan (ID: {p.cabangId})</span>
+                          )}
+                        </TableCell>
                       <TableCell>
                         <Badge
                           className={`font-medium text-[10px] ${p.stok < 20
@@ -423,9 +500,11 @@ export default function InventoryPage() {
                     <SelectValue placeholder="Pilih Jenis" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Makanan">Makanan</SelectItem>
-                    <SelectItem value="Minuman">Minuman</SelectItem>
-                    <SelectItem value="Barang">Barang</SelectItem>
+                    <SelectItem value="Frozen Food">Frozen Food</SelectItem>
+                    <SelectItem value="Topping">Topping</SelectItem>
+                    <SelectItem value="Pengemasan">Pengemasan</SelectItem>
+                    <SelectItem value="Operasional">Operasional</SelectItem>
+                    <SelectItem value="Penyedap">Penyedap</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -435,12 +514,12 @@ export default function InventoryPage() {
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700">Rasa</label>
                 <Input
-                  value={formData.rasa}
-                  onChange={(e) => setFormData({ ...formData, rasa: e.target.value })}
-                  placeholder="Contoh: Original"
-                  className="h-10 border-slate-200"
-                  disabled={formData.jenisProduk === "Barang"}
-                />
+                   value={formData.rasa}
+                   onChange={(e) => setFormData({ ...formData, rasa: e.target.value })}
+                   placeholder="Contoh: Original"
+                   className="h-10 border-slate-200"
+                   disabled={["Pengemasan", "Operasional"].includes(formData.jenisProduk)}
+                 />
               </div>
             </div>
 
@@ -472,7 +551,8 @@ export default function InventoryPage() {
                 <img
                   src={imagePreview}
                   alt="Preview"
-                  className="h-12 lg:h-14 w-12 lg:w-14 rounded-lg object-cover border border-slate-100"
+                  className="h-12 lg:h-14 w-12 lg:w-14 rounded-lg object-cover border border-slate-100 cursor-pointer hover:opacity-80 transition"
+                  onClick={() => setShowImagePreview(true)}
                 />
               )}
             </div>
@@ -499,26 +579,26 @@ export default function InventoryPage() {
              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-slate-700">Berat (g)</label>
-                <Input
-                  type="number"
-                  value={formData.berat}
-                  onChange={(e) =>
-                    setFormData({ ...formData, berat: parseInt(e.target.value) || 0 })
-                  }
-                  className="h-10 border-slate-200"
-                />
+                  <Input
+                     type="number"
+                     value={formData.berat}
+                     onChange={(e) =>
+                       setFormData({ ...formData, berat: parseFloat(e.target.value) || 0 })
+                     }
+                     className="h-10 border-slate-200"
+                   />
               </div>
               <div className="space-y-1.5 col-span-2 lg:col-span-1">
                 <label className="text-sm font-medium text-slate-700">Stok</label>
                 <div className="flex gap-2">
                   <Input
-                    type="number"
-                    value={formData.stok}
-                    onChange={(e) =>
-                      setFormData({ ...formData, stok: parseInt(e.target.value) || 0 })
-                    }
-                    className="h-10 border-slate-200"
-                  />
+                     type="number"
+                     value={formData.stok}
+                     onChange={(e) =>
+                       setFormData({ ...formData, stok: parseFloat(e.target.value) || 0 })
+                     }
+                     className="h-10 border-slate-200"
+                   />
                   <Select
                     value={formData.satuan}
                     onValueChange={(val) => setFormData({ ...formData, satuan: val })}
@@ -527,10 +607,15 @@ export default function InventoryPage() {
                       <SelectValue placeholder="Satuan" />
                     </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pcs">Pcs</SelectItem>
-                        <SelectItem value="pack">Pack</SelectItem>
-                        <SelectItem value="box">Box</SelectItem>
-                      </SelectContent>
+                         <SelectItem value="pcs">Pcs</SelectItem>
+                         <SelectItem value="box">Box</SelectItem>
+                         <SelectItem value="pack">Pack</SelectItem>
+                         <SelectItem value="tabung">Tabung</SelectItem>
+                         <SelectItem value="galon">Galon</SelectItem>
+                         <SelectItem value="set">Set</SelectItem>
+                         <SelectItem value="roll">Roll</SelectItem>
+                         <SelectItem value="botol">Botol</SelectItem>
+                       </SelectContent>
                   </Select>
                 </div>
               </div>
@@ -565,36 +650,52 @@ export default function InventoryPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Hapus */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="max-w-sm sm:max-w-md border-slate-200">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-slate-900">
-              Konfirmasi Hapus
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-3 lg:4">
-            <p className="text-slate-600 text-sm">
-              Apakah Anda yakin ingin menghapus bahan baku{" "}
-              <span className="font-semibold text-slate-900">{selectedBahan?.nama}</span>?
-              Tindakan ini tidak dapat dibatalkan.
-            </p>
-          </div>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-              className="border-slate-200"
-            >
-              Batal
-            </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Hapus
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+       {/* Dialog Hapus */}
+       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+         <DialogContent className="max-w-sm sm:max-w-md border-slate-200">
+           <DialogHeader>
+             <DialogTitle className="text-lg font-semibold text-slate-900">
+               Konfirmasi Hapus
+             </DialogTitle>
+           </DialogHeader>
+           <div className="py-3 lg:4">
+             <p className="text-slate-600 text-sm">
+               Apakah Anda yakin ingin menghapus bahan baku{" "}
+               <span className="font-semibold text-slate-900">{selectedBahan?.nama}</span>?
+               Tindakan ini tidak dapat dibatalkan.
+             </p>
+           </div>
+           <DialogFooter className="flex flex-col sm:flex-row gap-2">
+             <Button
+               variant="outline"
+               onClick={() => setIsDeleteDialogOpen(false)}
+               className="border-slate-200"
+             >
+               Batal
+             </Button>
+             <Button variant="destructive" onClick={handleDelete}>
+               Hapus
+             </Button>
+           </DialogFooter>
+         </DialogContent>
+       </Dialog>
+
+       {/* Dialog Preview Gambar */}
+       <Dialog open={showImagePreview} onOpenChange={setShowImagePreview}>
+         <DialogContent className="max-w-2xl sm:max-w-3xl border-slate-200 p-2">
+           <DialogHeader>
+             <DialogTitle className="sr-only">Preview Gambar</DialogTitle>
+           </DialogHeader>
+           <div className="relative">
+             <img
+               src={imagePreview}
+               alt="Preview"
+               className="w-full h-auto rounded-lg"
+             />
+           </div>
+         </DialogContent>
+       </Dialog>
+     </div>
+   );
+ }
 

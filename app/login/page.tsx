@@ -14,11 +14,20 @@ export default function LoginPage() {
   const [error, setError] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const router = useRouter();
-  const { login, fetchUsers } = useAuthStore();
+  const { login, fetchUsers, currentUser } = useAuthStore();
+
+  // Cek jika sudah login, redirect ke halaman sesuai role
+  React.useEffect(() => {
+    if (currentUser) {
+      router.push(currentUser.role === "ADMIN" ? "/admin" : "/cashier");
+    }
+  }, [currentUser, router]);
 
   React.useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (!currentUser) {
+      fetchUsers();
+    }
+  }, [currentUser]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

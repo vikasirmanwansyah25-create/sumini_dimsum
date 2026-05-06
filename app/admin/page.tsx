@@ -36,6 +36,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = React.useState(true);
   const [cabangList, setCabangList] = React.useState<any[]>([]);
   const [selectedCabangId, setSelectedCabangId] = React.useState<string>("all");
+  const [chartPeriod, setChartPeriod] = React.useState<"7hari" | "30hari">("7hari");
 
   React.useEffect(() => {
     Promise.all([
@@ -182,41 +183,56 @@ export default function AdminDashboard() {
             <CardTitle className="text-sm lg:text-base font-semibold text-slate-800">Tren Penjualan</CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="7hari">
-              <TabsList className="mb-3 lg:mb-4 bg-slate-100 h-7 lg:h-8">
-                <TabsTrigger value="7hari" className="text-xs data-[state=active]:bg-white">7 Hari</TabsTrigger>
-                <TabsTrigger value="30hari" className="text-xs data-[state=active]:bg-white">30 Hari</TabsTrigger>
-              </TabsList>
-              {["7hari", "30hari"].map((tab) => (
-                <TabsContent key={tab} value={tab}>
-                  <div className="h-52 lg:h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart
-                        data={stats ? (tab === "7hari" ? stats.grafik7Hari : stats.grafik30Hari) : []}
-                        margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
-                      >
-                        <defs>
-                          <linearGradient id={`gradP-${tab}`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                          </linearGradient>
-                          <linearGradient id={`gradL-${tab}`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} />
-                            <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                        <XAxis dataKey="tanggal" stroke="#94a3b8" fontSize={10} tickLine={false} />
-                        <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} tickFormatter={(v: any) => "Rp" + Math.round(v / 1000) + "rb"} />
-                        <Tooltip formatter={(value: any) => formatRupiah(value)} />
-                        <Area type="monotone" dataKey="penjualan" stroke="#3b82f6" strokeWidth={2} fill={`url(#gradP-${tab})`} />
-                        <Area type="monotone" dataKey="laba" stroke="#22c55e" strokeWidth={2} fill={`url(#gradL-${tab})`} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </TabsContent>
-              ))}
-            </Tabs>
+              <div>
+              <div className="mb-3 lg:mb-4 flex gap-1 bg-slate-100 p-1 rounded-lg w-fit h-7 lg:h-8">
+                <button
+                  onClick={() => setChartPeriod("7hari")}
+                  className={`text-xs px-3 rounded-md transition-all ${
+                    chartPeriod === "7hari"
+                      ? "bg-white shadow-sm text-slate-800"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  7 Hari
+                </button>
+                <button
+                  onClick={() => setChartPeriod("30hari")}
+                  className={`text-xs px-3 rounded-md transition-all ${
+                    chartPeriod === "30hari"
+                      ? "bg-white shadow-sm text-slate-800"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  30 Hari
+                </button>
+              </div>
+              <div className="h-52 lg:h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={chartPeriod === "7hari" ? (stats?.grafik7Hari || []) : (stats?.grafik30Hari || [])}
+                    margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
+                    key={chartPeriod}
+                  >
+                    <defs>
+                      <linearGradient id="gradP" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="gradL" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="tanggal" stroke="#94a3b8" fontSize={10} tickLine={false} />
+                    <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} tickFormatter={(v: any) => "Rp" + Math.round(v / 1000) + "rb"} />
+                    <Tooltip formatter={(value: any) => formatRupiah(value)} />
+                    <Area type="monotone" dataKey="penjualan" stroke="#3b82f6" strokeWidth={2} fill="url(#gradP)" />
+                    <Area type="monotone" dataKey="laba" stroke="#22c55e" strokeWidth={2} fill="url(#gradL)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

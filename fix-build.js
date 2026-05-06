@@ -609,4 +609,3 @@ fs.writeFileSync('app/cashier/riwayat/page.tsx', riwayat);
 fs.writeFileSync('app/admin/laporan/page.tsx', laporan);
 fs.writeFileSync('app/admin/page.tsx', dashboard);
 console.log('All 3 files fixed');
-`;

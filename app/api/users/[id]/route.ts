@@ -34,7 +34,7 @@ export async function PUT(
     console.log("Updating user:", id, body);
 
     if (body.role === "KASIR" && !body.cabangId) {
-      return NextResponse.json({ error: "Cabang wajib dipilih untuk kasir" }, { status: 400 });
+      return NextResponse.json({ success: false, message: "Cabang wajib dipilih untuk kasir" }, { status: 400 });
     }
     
     const updateData: any = {};
@@ -49,19 +49,19 @@ export async function PUT(
       .from('User')
       .update(updateData)
       .eq('id', id)
-      .select()
+      .select(`*, cabang:Cabang(id, nama, alamat)`)
       .maybeSingle();
 
     if (error) {
       console.error("Supabase UPDATE error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
     }
 
     console.log("User updated successfully:", user);
-    return NextResponse.json(user);
+    return NextResponse.json({ success: true, data: user });
   } catch (error) {
     console.error("Unexpected error:", error);
-    return NextResponse.json({ error: "Gagal mengupdate user" }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Gagal mengupdate user" }, { status: 500 });
   }
 }
 
@@ -80,13 +80,13 @@ export async function DELETE(
 
     if (error) {
       console.error("Supabase DELETE error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ success: false, message: error.message }, { status: 500 });
     }
 
     console.log("User deleted successfully");
-    return NextResponse.json({ message: "User berhasil dihapus" });
+    return NextResponse.json({ success: true, message: "User berhasil dihapus" });
   } catch (error) {
     console.error("Unexpected error:", error);
-    return NextResponse.json({ error: "Gagal menghapus user" }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Gagal menghapus user" }, { status: 500 });
   }
 }

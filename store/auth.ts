@@ -80,6 +80,7 @@
 
 
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { User } from "@/lib/types";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -96,23 +97,29 @@ interface AuthState {
   deleteUser: (id: string) => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set, get) => ({
   currentUser: null,
   users: [],
   isLoading: false,
 
-  fetchUsers: async () => {
-    set({ isLoading: true });
-    try {
-      const res = await fetch("/api/users");
-      const data = await res.json();
-      const users = Array.isArray(data) ? data : (data.users || data.data || []);
-      set({ users, isLoading: false });
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      set({ isLoading: false });
-    }
-  },
+   fetchUsers: async () => {
+     set({ isLoading: true });
+     try {
+       const res = await fetch("/api/users");
+       const json = await res.json();
+       const users = json.success ? json.data : (Array.isArray(json) ? json : []);
+       const mappedUsers = users.map((u: any) => ({
+         ...u,
+         cabang: u.cabang || null
+       }));
+       set({ users: mappedUsers, isLoading: false });
+     } catch (error) {
+       console.error("Error fetching users:", error);
+       set({ isLoading: false });
+     }
+   },
 
   // Logika login yang baru, langsung cek ke Supabase
   login: async (username, password) => {
@@ -150,21 +157,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ currentUser: null });
   },
 
-  addUser: async (userData: Omit<User, "id" | "createdAt">) => {
-    const res = await fetch("/api/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(userData),
-    });
-    
-    if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.error || "Gagal menambah user");
-    }
-    
-    const newUser = await res.json();
-    set((state) => ({ users: [...state.users, newUser] }));
-  },
+   addUser: async (userData: Omit<User, "id" | "createdAt">) => {
+     const res = await fetch("/api/users", {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
+       body: JSON.stringify(userData),
+     });
+     
+     if (!res.ok) {
+       const error = await res.json();
+       throw new Error(error.error || error.message || "Gagal menambah user");
+     }
+     
+     const json = await res.json();
+     const newUser = json.success ? json.data : json;
+     set((state) => ({ users: [...state.users, newUser] }));
+   },
 
   updateUser: async (id: string, data: Partial<User>) => {
     const res = await fetch(`/api/users/${id}`, {
@@ -197,4 +205,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       currentUser: state.currentUser?.id === id ? null : state.currentUser,
     }));
   },
-}));
+}),
+{
+  name: "auth-storage", // nama di localStorage
+  partialize: (state) => ({ currentUser: state.currentUser }), // hanya simpan currentUser
+}
+));

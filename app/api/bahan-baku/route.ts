@@ -6,10 +6,10 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const cabangId = searchParams.get("cabangId");
 
-let query = supabase
-       .from('BahanBaku')
-       .select('*, cabang:Cabang!BahanBaku_cabangId_fkey(*)')
-       .order('createdAt', { ascending: false });
+    let query = supabase
+      .from('BahanBaku')
+      .select('*')
+      .order('createdAt', { ascending: false });
 
     if (cabangId) {
       query = query.eq('cabangId', cabangId);
@@ -18,7 +18,19 @@ let query = supabase
     const { data: bahanBaku, error } = await query;
 
     if (error) throw error;
-    return NextResponse.json({ success: true, data: bahanBaku });
+
+    // Ambil semua cabang untuk mapping
+    const { data: cabangData } = await supabase
+      .from('Cabang')
+      .select('*');
+
+    // Gabungkan data bahanBaku dengan cabang
+    const bahanWithCabang = bahanBaku?.map(item => ({
+      ...item,
+      cabang: cabangData?.find(c => c.id === item.cabangId) || null
+    }));
+
+    return NextResponse.json({ success: true, data: bahanWithCabang });
   } catch (error: any) {
     console.error("GET /api/bahan-baku error:", error);
     return NextResponse.json(

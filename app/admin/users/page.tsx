@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus, Pencil, Trash2, Shield, User } from "lucide-react";
+import { Plus, Pencil, Trash2, Shield, User, Eye, EyeOff } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,7 @@ export default function UsersPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [selectedUserId, setSelectedUserId] = React.useState<string | null>(null);
   const [cabangList, setCabangList] = React.useState<Cabang[]>([]);
+  const [showPassword, setShowPassword] = React.useState(false);
   const [formData, setFormData] = React.useState({
     username: "",
     password: "",
@@ -76,13 +78,14 @@ export default function UsersPage() {
   };
 
   const handleOpenDialog = (userId?: string) => {
+    setShowPassword(false);
     if (userId) {
       const user = users.find((u) => u.id === userId);
       if (user) {
         setSelectedUserId(userId);
         setFormData({
           username: user.username,
-          password: user.password,
+          password: user.password || "",
           nama: user.nama,
           role: user.role,
           cabangId: user.cabangId || "",
@@ -115,12 +118,21 @@ export default function UsersPage() {
     setIsLoading(true);
     try {
       if (selectedUserId) {
-        const { password, ...updateData } = formData;
+        const updateData: any = {
+          username: formData.username,
+          nama: formData.nama,
+          role: formData.role,
+          cabangId: formData.cabangId,
+        };
+        if (formData.password) {
+          updateData.password = formData.password;
+        }
         await updateUser(selectedUserId, updateData);
       } else {
         await addUser(formData);
       }
       setIsDialogOpen(false);
+      setShowPassword(false);
     } catch (err: any) {
       alert(err.message || "Gagal menyimpan user");
     }
@@ -150,7 +162,7 @@ export default function UsersPage() {
           </h1>
           <p className="text-xs lg:text-sm text-charcoal-500">Kelola akun kasir</p>
         </div>
-        <Button onClick={() => handleOpenDialog()}>
+        <Button onClick={() => handleOpenDialog()} className="bg-[#4B736A] hover:bg-[#4B736A]/90 text-white">
           <Plus className="h-4 w-4 mr-2" />
           Tambah User
         </Button>
@@ -221,7 +233,14 @@ export default function UsersPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {user.role === "KASIR" ? (user.cabang?.nama || "-") : "-"}
+                    {user.role === "KASIR" ? (
+                      <div>
+                        <div>{user.cabang?.nama || "-"}</div>
+                        {user.cabang?.alamat && (
+                          <div className="text-xs text-slate-500">{user.cabang.alamat}</div>
+                        )}
+                      </div>
+                    ) : "-"}
                   </TableCell>
                   <TableCell>{formatDate(user.createdAt)}</TableCell>
                   <TableCell>
@@ -264,8 +283,7 @@ export default function UsersPage() {
           <div className="grid gap-3 lg:gap-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Username</label>
-              <input
-                className="flex h-10 lg:h-11 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 focus-visible:ring-offset-2"
+              <Input
                 value={formData.username}
                 onChange={(e) =>
                   setFormData({ ...formData, username: e.target.value })
@@ -273,24 +291,32 @@ export default function UsersPage() {
                 placeholder="Contoh: nama_kasir"
               />
             </div>
-            {!selectedUserId && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Password</label>
-                <input
-                  type="password"
-                  className="flex h-10 lg:h-11 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 focus-visible:ring-offset-2"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  placeholder="Masukkan password"
-                />
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Password</label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
+                    placeholder={selectedUserId ? "Kosongkan jika tidak diubah" : "Masukkan password"}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
-            )}
+            </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Nama Lengkap</label>
-              <input
-                className="flex h-10 lg:h-11 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-700 focus-visible:ring-offset-2"
+              <Input
                 value={formData.nama}
                 onChange={(e) =>
                   setFormData({ ...formData, nama: e.target.value })
@@ -332,24 +358,26 @@ export default function UsersPage() {
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih Cabang" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {cabangList.map((cabang) => (
-                        <SelectItem key={cabang.id} value={cabang.id}>
-                          {cabang.nama}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                      <SelectContent>
+                        {cabangList.map((cabang) => (
+                          <SelectItem key={cabang.id} value={cabang.id}>
+                            {cabang.nama}{cabang.alamat ? ` - ${cabang.alamat}` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
                   </Select>
                 )}
               </div>
             )}
           </div>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Batal
-            </Button>
-            <Button onClick={handleSave}>Simpan</Button>
-          </DialogFooter>
+           <DialogFooter className="flex flex-col sm:flex-row gap-2">
+             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+               Batal
+             </Button>
+             <Button onClick={handleSave} className="bg-[#4B736A] hover:bg-[#4B736A]/90 text-white">
+               Simpan
+             </Button>
+           </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -361,17 +389,14 @@ export default function UsersPage() {
           <p className="py-3 lg:4">
             Apakah Anda yakin ingin menghapus user ini?
           </p>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
-              Batal
-            </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Hapus
-            </Button>
-          </DialogFooter>
+           <DialogFooter className="flex flex-col sm:flex-row gap-2">
+             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+               Batal
+             </Button>
+             <Button variant="destructive" onClick={handleDelete}>
+               Hapus
+             </Button>
+           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

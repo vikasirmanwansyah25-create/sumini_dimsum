@@ -77,7 +77,10 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           "flex items-center h-20 px-4 border-b border-white/20",
           collapsed ? "justify-center" : "gap-2"
         )}>
-          <div className="w-16 h-16 flex items-center justify-center shrink-0">
+          <div className={cn(
+            "flex items-center justify-center shrink-0",
+            collapsed ? "w-10 h-10" : "w-16 h-16"
+          )}>
              <img src="/gambar/logo1.png" alt="SUMUNI" className="w-full h-full object-contain" />
            </div>
           {!collapsed && (
@@ -137,6 +140,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
               <div
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 cursor-pointer",
+                  collapsed ? "justify-center px-2" : "",
                   isActive
                      ? "bg-white text-[#4B736A]"
                      : "hover:bg-white/20 text-white"
@@ -156,7 +160,10 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                     <span className="text-sm font-medium block leading-none">
                       {link.label}
                     </span>
-                    <span className="text-[10px] mt-0.5 block text-white/60">
+                    <span className={cn(
+                      "text-[10px] mt-0.5 block",
+                      isActive ? "text-[#4B736A]/60" : "text-white/60"
+                    )}>
                       {link.desc}
                     </span>
                   </div>
@@ -174,7 +181,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           className={cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group w-full",
             "text-white/70 hover:bg-red-500/20 hover:text-red-400",
-            collapsed ? "justify-center" : ""
+            collapsed ? "justify-center px-2" : ""
           )}
         >
           <div className="w-8 h-8 rounded-lg bg-white/20 group-hover:bg-red-500/30 flex items-center justify-center shrink-0">
@@ -190,7 +197,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           className={cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group w-full",
             "text-white/70 hover:bg-white/20 hover:text-white",
-            collapsed ? "justify-center" : ""
+            collapsed ? "justify-center px-2" : ""
           )}
         >
           <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">

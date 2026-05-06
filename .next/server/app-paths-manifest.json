@@ -1,9 +1,0 @@
-{
-  "/api/users/route": "app/api/users/route.js",
-  "/api/transaksi/stats/route": "app/api/transaksi/stats/route.js",
-  "/api/bahan-baku/route": "app/api/bahan-baku/route.js",
-  "/api/cabang/route": "app/api/cabang/route.js",
-  "/login/page": "app/login/page.js",
-  "/admin/page": "app/admin/page.js",
-  "/admin/inventory/page": "app/admin/inventory/page.js"
-}

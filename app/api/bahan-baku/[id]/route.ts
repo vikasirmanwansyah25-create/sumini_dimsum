@@ -33,6 +33,8 @@ export async function PUT(
     if (deskripsi !== undefined) updateData.deskripsi = deskripsi;
     if (jenisProduk !== undefined) updateData.jenisProduk = jenisProduk;
     if (satuan !== undefined) updateData.satuan = satuan;
+    
+    console.log("Update data for BahanBaku ID:", id, "Data:", updateData);
 
     if (gambar !== undefined && existing.gambar && existing.gambar !== gambar) {
       await deleteImageFromCloudinary(existing.gambar);
@@ -42,12 +44,25 @@ export async function PUT(
       .from('BahanBaku')
       .update(updateData)
       .eq('id', id)
-      .select('*, Cabang!BahanBaku_cabangId_fkey(*)')
+      .select('*')
       .single();
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true, data: bahanBaku });
+    // Ambil data cabang secara terpisah
+    const { data: cabangData } = await supabase
+      .from('Cabang')
+      .select('*')
+      .eq('id', bahanBaku.cabangId)
+      .single();
+
+    // Gabungkan data
+    const result = {
+      ...bahanBaku,
+      cabang: cabangData || null
+    };
+
+    return NextResponse.json({ success: true, data: result });
   } catch (error: any) {
     console.error("PUT /api/bahan-baku/[id] error:", error);
     return NextResponse.json(

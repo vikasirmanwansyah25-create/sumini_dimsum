@@ -15,13 +15,13 @@ CREATE TABLE IF NOT EXISTS "BahanBaku" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "nama" TEXT NOT NULL,
     "rasa" TEXT,
-    "berat" INTEGER NOT NULL,
-    "stok" INTEGER NOT NULL,
+    "berat" NUMERIC NOT NULL DEFAULT 0, 
+    "stok" NUMERIC NOT NULL DEFAULT 0,
     "satuan" TEXT NOT NULL DEFAULT 'pcs' 
-        CHECK ("satuan" IN ('pcs', 'box', 'pack', 'gram', 'kg')),
-    "gambar" TEXT,
+        CHECK ("satuan" IN ('pcs', 'box', 'pack', 'tabung', 'galon', 'set', 'roll', 'botol')),
     "deskripsi" TEXT,
-    "jenisProduk" TEXT NOT NULL DEFAULT 'Makanan',
+    "gambar" TEXT,
+    "jenisProduk" TEXT NOT NULL DEFAULT 'Frozen Food',
     "cabangId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_cabang FOREIGN KEY ("cabangId") REFERENCES "Cabang"("id") ON DELETE CASCADE ON UPDATE CASCADE
