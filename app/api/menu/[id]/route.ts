@@ -65,12 +65,17 @@ export async function PUT(
       .from('Menu')
       .update(updateData)
       .eq('id', id)
-      .select('*, Cabang!Menu_cabangId_fkey(*)')
+      .select('*, cabang:Cabang!Menu_cabangId_fkey(*)')
       .single();
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true, data: menu });
+    const transformedMenu = {
+      ...menu,
+      hargaBeli: menu.harga_beli,
+    };
+
+    return NextResponse.json({ success: true, data: transformedMenu });
   } catch (error) {
     console.error("PUT /api/menu/[id] error:", error);
     return NextResponse.json(

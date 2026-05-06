@@ -191,8 +191,18 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
       return;
     }
 
-    if (formData.hargaBeli && formData.hargaBeli < 0) {
-      alert("Harga beli tidak boleh negatif");
+    if (!formData.hargaBeli || formData.hargaBeli <= 0) {
+      alert("Harga beli wajib diisi");
+      return;
+    }
+
+    if (!formData.gambar) {
+      alert("Gambar produk wajib diupload");
+      return;
+    }
+
+    if (!formData.deskripsi.trim()) {
+      alert("Deskripsi produk wajib diisi");
       return;
     }
 
@@ -419,7 +429,7 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
           <div className="grid gap-3 lg:gap-4 py-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-700">Nama Produk</label>
+                <label className="text-sm font-medium text-slate-700">Nama Produk <span className="text-red-500">*</span></label>
                 <Input
                   value={formData.nama}
                   onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
@@ -428,7 +438,7 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-700">Kategori</label>
+                <label className="text-sm font-medium text-slate-700">Kategori <span className="text-red-500">*</span></label>
                 <Select
                   value={formData.kategori}
                   onValueChange={(val) => setFormData({ ...formData, kategori: val })}
@@ -437,10 +447,13 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                     <SelectValue placeholder="Pilih Kategori" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Makanan">Makanan</SelectItem>
-                    <SelectItem value="Minuman">Minuman</SelectItem>
-                    <SelectItem value="Snack">Snack</SelectItem>
-                    <SelectItem value="Paket">Paket</SelectItem>
+                    <SelectItem value="Original">Original</SelectItem>
+                    <SelectItem value="Mentai">Mentai</SelectItem>
+                    <SelectItem value="Mix">Mix</SelectItem>
+                    <SelectItem value="Moza">Moza</SelectItem>
+                    <SelectItem value="Additional">Additional</SelectItem>
+                    <SelectItem value="Party Size">Party Size</SelectItem>
+                    <SelectItem value="Frozen">Frozen</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -471,7 +484,7 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
 
             <div className="grid grid-cols-2 gap-3 lg:gap-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-700">Harga Jual</label>
+                <label className="text-sm font-medium text-slate-700">Harga Jual <span className="text-red-500">*</span></label>
                 <Input
                   type="number"
                   value={formData.harga}
@@ -480,7 +493,7 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-700">Harga Beli</label>
+                <label className="text-sm font-medium text-slate-700">Harga Beli <span className="text-red-500">*</span></label>
                 <Input
                   type="number"
                   value={formData.hargaBeli}
@@ -491,7 +504,7 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700">Gambar</label>
+                <label className="text-sm font-medium text-slate-700">Gambar <span className="text-red-500">*</span></label>
               <div className="flex items-center gap-3 lg:gap-4">
               <label className="cursor-pointer flex items-center gap-2 px-3 lg:px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition text-sm text-slate-600">
                 {uploading ? (
@@ -525,7 +538,7 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700">Deskripsi</label>
+                <label className="text-sm font-medium text-slate-700">Deskripsi <span className="text-red-500">*</span></label>
               <Input
                 value={formData.deskripsi}
                 onChange={(e) => setFormData({ ...formData, deskripsi: e.target.value })}

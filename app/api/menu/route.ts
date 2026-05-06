@@ -39,7 +39,13 @@ let query = supabase
     const { data: menu, error } = await query.order('createdAt', { ascending: false });
 
     if (error) throw error;
-    return NextResponse.json({ success: true, data: menu });
+
+    const transformedMenu = menu?.map((item: any) => ({
+      ...item,
+      hargaBeli: item.harga_beli,
+    })) || [];
+
+    return NextResponse.json({ success: true, data: transformedMenu });
   } catch (error) {
     console.error("GET /api/menu error:", error);
     return NextResponse.json(
@@ -88,7 +94,12 @@ const { data: menu, error } = await supabase
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true, data: menu }, { status: 201 });
+    const transformedMenu = {
+      ...menu,
+      hargaBeli: menu.harga_beli,
+    };
+
+    return NextResponse.json({ success: true, data: transformedMenu }, { status: 201 });
   } catch (error: any) {
     console.error("POST /api/menu error:", error);
     const message = error?.message || error?.error_description || "Gagal menambah menu";

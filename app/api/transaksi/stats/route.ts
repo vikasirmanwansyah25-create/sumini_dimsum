@@ -59,6 +59,48 @@ export async function GET(request: Request) {
     const { data: transaksi30, error: error30 } = await query30;
     if (error30) throw error30;
 
+    // Get all transaction IDs
+    const trxIds7 = transaksi7?.map((t: any) => t.id) || [];
+    const trxIds30 = transaksi30?.map((t: any) => t.id) || [];
+
+    // Fetch cart items (already has harga and menuId)
+    const { data: cartItems7 } = await supabase
+      .from('CartItem')
+      .select('transaksiId, jumlah, harga, menuId')
+      .in('transaksiId', trxIds7.length > 0 ? trxIds7 : ['']);
+
+    const { data: cartItems30 } = await supabase
+      .from('CartItem')
+      .select('transaksiId, jumlah, harga, menuId')
+      .in('transaksiId', trxIds30.length > 0 ? trxIds30 : ['']);
+
+    // Fetch Menu data to get harga_beli
+    const menuIds7 = [...new Set(cartItems7?.map((ci: any) => ci.menuId) || [])];
+    const { data: menus7 } = await supabase
+      .from('Menu')
+      .select('id, harga_beli')
+      .in('id', menuIds7.length > 0 ? menuIds7 : ['']);
+
+    const menuIds30 = [...new Set(cartItems30?.map((ci: any) => ci.menuId) || [])];
+    const { data: menus30 } = await supabase
+      .from('Menu')
+      .select('id, harga_beli')
+      .in('id', menuIds30.length > 0 ? menuIds30 : ['']);
+
+    // Create lookup maps for fast access
+    const menuMap7 = new Map(menus7?.map((m: any) => [m.id, m.harga_beli]) || []);
+    const menuMap30 = new Map(menus30?.map((m: any) => [m.id, m.harga_beli]) || []);
+
+    // Helper to calculate actual profit
+    const calculateProfit = (trxId: string, items: any[], map: Map<string, number>): number => {
+      if (!items) return 0;
+      const trxItems = items.filter((ci: any) => ci.transaksiId === trxId);
+      return trxItems.reduce((profit: number, ci: any) => {
+        const hargaBeli = map.get(ci.menuId) || 0;
+        return profit + ((ci.harga - hargaBeli) * ci.jumlah);
+      }, 0);
+    };
+
     // Build 7-day chart data
     const data7: Record<string, { tanggal: string; penjualan: number; laba: number }> = {};
     for (let i = 0; i < 7; i++) {
@@ -73,7 +115,7 @@ export async function GET(request: Request) {
         const key = formatDateLabel(new Date(trx.tanggal));
         if (data7[key]) {
           data7[key].penjualan += trx.total || 0;
-          data7[key].laba += (trx.total || 0) * 0.3;
+          data7[key].laba += calculateProfit(trx.id, cartItems7 || [], menuMap7);
         }
       }
     }
@@ -92,14 +134,14 @@ export async function GET(request: Request) {
         const key = formatDateLabel(new Date(trx.tanggal));
         if (data30[key]) {
           data30[key].penjualan += trx.total || 0;
-          data30[key].laba += (trx.total || 0) * 0.3;
+          data30[key].laba += calculateProfit(trx.id, cartItems30 || [], menuMap30);
         }
       }
     }
 
     // Calculate summary
     const totalPenjualan = transaksi7 ? transaksi7.reduce((s: number, t: any) => s + (t.total || 0), 0) : 0;
-    const totalLaba = totalPenjualan * 0.3;
+    const totalLaba = transaksi7 ? transaksi7.reduce((s: number, t: any) => s + calculateProfit(t.id, cartItems7 || [], menuMap7), 0) : 0;
     const totalTransaksi = transaksi7 ? transaksi7.length : 0;
 
     return NextResponse.json({
