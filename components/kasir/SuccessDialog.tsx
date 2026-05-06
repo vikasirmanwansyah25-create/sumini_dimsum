@@ -3,11 +3,10 @@
 import * as React from "react";
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { formatRupiah, formatDate, formatTime } from "@/lib/utils";
 import { MetodePembayaran } from "@/lib/types";
 import { useAuthStore } from "@/store/auth";
-import { Printer, CheckCircle2, Receipt, Store, Clock, Calendar, Package, Upload, X, ImageIcon } from "lucide-react";
+import { Printer, CheckCircle2 } from "lucide-react";
 
 interface CartItem {
   id: string;
@@ -64,133 +63,112 @@ export function SuccessDialog({
   const cabangNama = propCabangNama || currentUser?.cabang?.nama || "Nama Cabang";
   const cabangAlamat = propCabangAlamat || currentUser?.cabang?.alamat || "Alamat Cabang";
   const cabangTelepon = propCabangTelepon || currentUser?.cabang?.telepon || "0812-3456-7890";
-  const [buktiPenjualan, setBuktiPenjualan] = React.useState<string | null>(null);
-  const [uploading, setUploading] = React.useState(false);
 
   const handlePrint = () => {
-     const printWindow = window.open('', '_blank');
-     if (!printWindow) {
-       alert('Popup diblokir. Harap izinkan popup untuk mencetak struk.');
-       return;
-     }
-
-     let itemsHTML = '';
-     items.forEach(item => {
-       itemsHTML += '<tr>';
-       itemsHTML += '<td style="padding:4px 2px; font-size:11px; width:30px;">' + item.jumlah + 'x</td>';
-       itemsHTML += '<td style="padding:4px 2px; font-size:11px;">' + item.nama + '</td>';
-       itemsHTML += '<td style="text-align:right; padding:4px 2px; font-size:11px; width:75px;">' + formatRupiah(item.harga * item.jumlah) + '</td>';
-       itemsHTML += '</tr>';
-       if (item.deskripsi) {
-         itemsHTML += '<tr><td colspan="3" style="padding:0 2px 4px 30px; font-size:9px; color:#666;">' + item.deskripsi + '</td></tr>';
-       }
-     });
-
-     let receiptParts = [];
-     receiptParts.push('<html><head><title>Struk</title><meta charset="utf-8">');
-     receiptParts.push('<style>*{margin:0;padding:0;box-sizing:border-box;}');
-     receiptParts.push('body{font-family:"Courier New",Courier,monospace;font-size:11px;line-height:1.2;width:75mm;margin:0 auto;padding:2mm;color:#000;}');
-     receiptParts.push('table{width:100%;border-collapse:collapse;}td{vertical-align:top;}');
-     receiptParts.push('.center{text-align:center;}.dash{border-top:1px dashed #000;margin:5px 0;}');
-     receiptParts.push('.store{font-size:14px;font-weight:bold;margin-bottom:3px;}');
-     receiptParts.push('.info{font-size:10px;color:#555;}');
-     receiptParts.push('.rinfo{margin:5px 0;padding:5px 0;border-top:1px dashed #000;border-bottom:1px dashed #000;font-size:10px;text-align:center;}');
-     receiptParts.push('.total{margin-top:6px;padding-top:6px;border-top:2px solid #000;font-weight:bold;font-size:12px;}');
-     receiptParts.push('.pay{margin-top:5px;padding-top:5px;border-top:1px dashed #000;font-size:10px;}');
-     receiptParts.push('.footer{margin-top:6px;padding-top:6px;border-top:1px dashed #000;text-align:center;font-size:10px;color:#555;}');
-     receiptParts.push('@media print{body{padding:0;width:100%;}@page{margin:2mm;size:80mm auto;}}');
-     receiptParts.push('</style></head><body>');
-
-     receiptParts.push('<div style="text-align:center;margin-bottom:6px;">');
-     receiptParts.push('<div style="font-size:14px;font-weight:bold;">' + cabangNama.toUpperCase() + '</div>');
-     if (cabangAlamat) receiptParts.push('<div style="font-size:10px;color:#555;">' + cabangAlamat + '</div>');
-     if (cabangTelepon) receiptParts.push('<div style="font-size:10px;color:#555;">Telp: ' + cabangTelepon + '</div>');
-     receiptParts.push('</div>');
-
-     receiptParts.push('<div class="rinfo">');
-     receiptParts.push('<div>#' + transaksiId.slice(-8).toUpperCase() + '</div>');
-     receiptParts.push('<div>' + formatDate(tanggal) + ' ' + formatTime(tanggal) + '</div>');
-     receiptParts.push('<div>' + metodeLabel[metodePembayaran] + '</div>');
-     receiptParts.push('</div>');
-
-     receiptParts.push('<table><tr><td colspan="3"><div class="dash"></div></td></tr>');
-     receiptParts.push(itemsHTML);
-     receiptParts.push('<tr><td colspan="3"><div class="dash"></div></td></tr></table>');
-
-     receiptParts.push('<table class="total"><tr><td>TOTAL</td><td style="text-align:right;">' + formatRupiah(total) + '</td></tr></table>');
-
-     receiptParts.push('<table class="pay"><tr><td>Bayar</td><td style="text-align:right;">' + formatRupiah(bayar) + '</td></tr>');
-     if (kembalian > 0) receiptParts.push('<tr><td>Kembali</td><td style="text-align:right;">' + formatRupiah(kembalian) + '</td></tr>');
-     receiptParts.push('</table>');
-
-     if (catatan) {
-       receiptParts.push('<div class="pay"><div style="margin-bottom:2px;"><b>Catatan:</b></div><div>' + catatan + '</div></div>');
-     }
-
-     receiptParts.push('<div class="footer"><div>~ Terima Kasih ~</div>');
-     receiptParts.push('<div style="margin-top:2px;">Barang dibeli tidak</div>');
-     receiptParts.push('<div>dapat dikembalikan</div></div>');
-
-     receiptParts.push('</body></html>');
-
-     printWindow.document.write(receiptParts.join(''));
-     printWindow.document.close();
-
-     printWindow.onload = function() {
-       setTimeout(function() {
-         printWindow.print();
-         setTimeout(function() {
-           printWindow.close();
-         }, 500);
-       }, 250);
-     };
-   };
-
-   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      alert("Harap upload file gambar (JPG, PNG, dll)");
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Popup diblokir. Harap izinkan popup untuk mencetak struk.');
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Ukuran file maksimal 5MB");
-      return;
+    let itemsHTML = '';
+    items.forEach(item => {
+      itemsHTML += '<tr>';
+      itemsHTML += '<td style="padding:5px 3px; font-size:10px; width:20px; font-weight:600;">' + item.jumlah + 'x</td>';
+      itemsHTML += '<td style="padding:5px 3px; font-size:10px;">' + item.nama + '</td>';
+      itemsHTML += '<td style="text-align:right; padding:5px 3px; font-size:10px; width:70px; font-weight:600;">' + formatRupiah(item.harga * item.jumlah) + '</td>';
+      itemsHTML += '</tr>';
+    });
+
+    let receiptParts = [];
+    receiptParts.push('<html><head><title>Struk</title><meta charset="utf-8">');
+    receiptParts.push('<style>');
+    receiptParts.push('*{margin:0;padding:0;box-sizing:border-box;}');
+    receiptParts.push('body{font-family:"Courier New",Courier,monospace;font-size:10px;line-height:1.3;width:76mm;margin:0 auto;padding:2.5mm;color:#333;background:#fff;}');
+    receiptParts.push('table{width:100%;border-collapse:collapse;}td{vertical-align:top;}');
+    receiptParts.push('.center{text-align:center;}');
+    receiptParts.push('.store-name{font-size:14px;font-weight:bold;margin-bottom:3px;color:#000;}');
+    receiptParts.push('.store-info{font-size:9px;color:#555;margin-bottom:1px;}');
+    receiptParts.push('.line{border-top:1px solid #333;margin:5px 0;height:0;}');
+    receiptParts.push('.line-dashed{border-top:1px dashed #666;margin:6px 0;height:0;}');
+    receiptParts.push('.info-table{font-size:9px;margin:5px 0;}');
+    receiptParts.push('.info-table td{padding:1px 0;}');
+    receiptParts.push('.label{color:#555;}');
+    receiptParts.push('.total-line{border-top:2px solid #000;border-bottom:1px solid #000;padding:5px 0;margin-top:5px;font-weight:bold;font-size:11px;}');
+    receiptParts.push('.pay-row{font-size:9px;padding:2px 0;display:flex;justify-content:space-between;}');
+    receiptParts.push('.footer{margin-top:8px;padding-top:5px;border-top:1px solid #333;text-align:center;font-size:9px;color:#555;}');
+    receiptParts.push('.thank-you{font-size:10px;font-weight:bold;margin-bottom:3px;}');
+    receiptParts.push('@media print{body{padding:0;width:100%;background:white;}@page{margin:2mm;size:80mm auto;}}');
+    receiptParts.push('</style></head><body>');
+
+    // Simple, elegant header
+    receiptParts.push('<div class="center" style="margin-bottom:5px;">');
+    receiptParts.push('<div class="store-name">' + cabangNama.toUpperCase() + '</div>');
+    if (cabangAlamat) receiptParts.push('<div class="store-info">' + cabangAlamat + '</div>');
+    if (cabangTelepon) receiptParts.push('<div class="store-info">Telp: ' + cabangTelepon + '</div>');
+    receiptParts.push('</div>');
+
+    receiptParts.push('<div class="line"></div>');
+
+    // Transaction Info - simple table
+    receiptParts.push('<table class="info-table">');
+    receiptParts.push('<tr><td class="label">No.</td><td style="text-align:right;">#' + transaksiId.slice(-8).toUpperCase() + '</td></tr>');
+    receiptParts.push('<tr><td class="label">Tanggal</td><td style="text-align:right;">' + formatDate(tanggal) + '</td></tr>');
+    receiptParts.push('<tr><td class="label">Waktu</td><td style="text-align:right;">' + formatTime(tanggal) + '</td></tr>');
+    receiptParts.push('<tr><td class="label">Metode</td><td style="text-align:right;">' + metodeLabel[metodePembayaran] + '</td></tr>');
+    receiptParts.push('</table>');
+
+    receiptParts.push('<div class="line-dashed"></div>');
+
+    // Items - simple list
+    receiptParts.push('<table style="margin:5px 0;font-size:9px;">');
+    receiptParts.push('<tr style="color:#555;border-bottom:1px dotted #999;"><td style="padding:2px;">Item</td><td style="text-align:center;padding:2px;">Qty</td><td style="text-align:right;padding:2px;">Subtotal</td></tr>');
+    receiptParts.push(itemsHTML);
+    receiptParts.push('</table>');
+
+    receiptParts.push('<div class="line-dashed"></div>');
+
+    // Total - bold and clear
+    receiptParts.push('<div class="total-line">');
+    receiptParts.push('<table style="width:100%;"><tr>');
+    receiptParts.push('<td style="font-size:11px;">TOTAL</td>');
+    receiptParts.push('<td style="text-align:right;font-size:12px;">' + formatRupiah(total) + '</td>');
+    receiptParts.push('</tr></table>');
+    receiptParts.push('</div>');
+
+    // Payment Details
+    receiptParts.push('<div style="margin-top:5px;">');
+    receiptParts.push('<div class="pay-row"><span class="label">Bayar</span><span>' + formatRupiah(bayar) + '</span></div>');
+    if (kembalian > 0) receiptParts.push('<div class="pay-row"><span class="label">Kembalian</span><span>' + formatRupiah(kembalian) + '</span></div>');
+    receiptParts.push('</div>');
+
+    if (catatan) {
+      receiptParts.push('<div style="margin-top:5px;padding:4px;font-size:9px;border-top:1px dashed #999;">');
+      receiptParts.push('<div style="font-weight:bold;margin-bottom:2px;">Catatan:</div>');
+      receiptParts.push('<div>' + catatan + '</div>');
+      receiptParts.push('</div>');
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setBuktiPenjualan(reader.result as string);
+    // Footer
+    receiptParts.push('<div class="footer">');
+    receiptParts.push('<div class="thank-you">~ Terima Kasih ~</div>');
+    receiptParts.push('<div>Barang yang sudah dibeli</div>');
+    receiptParts.push('<div>tidak dapat dikembalikan</div>');
+    receiptParts.push('</div>');
+
+    receiptParts.push('</body></html>');
+
+    printWindow.document.write(receiptParts.join(''));
+    printWindow.document.close();
+
+    printWindow.onload = function() {
+      setTimeout(function() {
+        printWindow.print();
+        setTimeout(function() {
+          printWindow.close();
+        }, 500);
+      }, 250);
     };
-    reader.readAsDataURL(file);
-  };
-
-  const removeBukti = () => {
-    setBuktiPenjualan(null);
-  };
-
-  const handleUploadBukti = async () => {
-    if (!buktiPenjualan) return;
-    setUploading(true);
-    try {
-      if (onUploadBukti) {
-        await onUploadBukti(transaksiId, buktiPenjualan);
-      } else {
-        const res = await fetch(`/api/transaksi/${transaksiId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ buktiPenjualan }),
-        });
-        if (!res.ok) throw new Error("Gagal upload");
-      }
-      alert("Bukti penjualan berhasil diupload!");
-    } catch (error) {
-      alert("Gagal mengupload bukti penjualan");
-    } finally {
-      setUploading(false);
-    }
   };
 
   return (
@@ -208,125 +186,125 @@ export function SuccessDialog({
             <p className="text-sm text-slate-500 mt-1">Pembayaran telah diterima</p>
           </div>
 
-           {/* Struk Preview - Print Friendly */}
+           {/* Struk Preview - Sama dengan Cetakan */}
            <div className="px-6 pb-2 receipt-print-area">
-            <div className="bg-white border border-slate-100 rounded-xl overflow-hidden print:border-0 print:rounded-none">
-              {/* Header Struk */}
-               <div className="text-center p-4 border-b border-slate-50 bg-slate-50/50 print:bg-white">
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <Store className="h-5 w-5 text-amber-500 print:hidden" />
-                  <h3 className="font-bold text-slate-900">{cabangNama}</h3>
-                </div>
-                {cabangAlamat && <p className="text-[11px] text-slate-500">{cabangAlamat}</p>}
-              </div>
+             <div className="bg-white border border-slate-300 rounded-lg overflow-hidden print:border-0 print:rounded-none" style={{fontFamily: 'Courier New, Courier, monospace', fontSize: '10px'}}>
+               {/* Header - Sama dengan Print */}
+               <div className="text-center p-3 border-b border-slate-300">
+                 <div className="font-bold text-sm text-slate-900">{cabangNama.toUpperCase()}</div>
+                 {cabangAlamat && <div className="text-[9px] text-slate-600 mt-0.5">{cabangAlamat}</div>}
+                 {cabangTelepon && <div className="text-[9px] text-slate-600">Telp: {cabangTelepon}</div>}
+               </div>
 
-              {/* Info */}
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-50 text-[11px] text-slate-500">
-                <div className="flex items-center gap-1">
-                  <Receipt className="h-3 w-3 print:hidden" />
-                  <span>#{transaksiId.slice(-8).toUpperCase()}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3 print:hidden" />
-                  <span>{formatDate(tanggal)}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="h-3 w-3 print:hidden" />
-                  <span>{formatTime(tanggal)}</span>
-                </div>
-              </div>
+               {/* Line */}
+               <div className="mx-3 border-t border-slate-400"></div>
 
-              {/* Items */}
-              <div className="divide-y divide-slate-50">
-                {items.map((item, idx) => (
-                  <div
-                    key={`${item.id}-${idx}`}
-                    className="flex justify-between items-center px-4 py-2.5"
-                  >
-                  <div className="flex items-center gap-2">
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">{item.nama}</p>
-                          <p className="text-[11px] text-slate-500">{item.kategori}</p>
-                          {item.deskripsi && (
-                            <p className="text-[10px] text-slate-400 mt-0.5">{item.deskripsi}</p>
-                          )}
-                          <p className="text-[11px] text-slate-500 mt-0.5">
-                            {item.jumlah} &times; {formatRupiah(item.harga)}
-                          </p>
-                        </div>
-                      </div>
-                    <span className="text-sm font-semibold text-slate-700">
-                      {formatRupiah(item.harga * item.jumlah)}
-                    </span>
-                  </div>
-                ))}
-              </div>
+               {/* Info - Simple Rows */}
+               <div className="px-3 py-2 space-y-0.5 text-[9px]">
+                 <div className="flex justify-between">
+                   <span className="text-slate-600">No.</span>
+                   <span className="font-medium">#{transaksiId.slice(-8).toUpperCase()}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span className="text-slate-600">Tanggal</span>
+                   <span className="font-medium">{formatDate(tanggal)}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span className="text-slate-600">Waktu</span>
+                   <span className="font-medium">{formatTime(tanggal)}</span>
+                 </div>
+                 <div className="flex justify-between">
+                   <span className="text-slate-600">Metode</span>
+                   <span className="font-medium">{metodeLabel[metodePembayaran]}</span>
+                 </div>
+               </div>
 
-              {/* Total */}
-              <div className="px-4 py-3 border-t border-slate-100 space-y-1">
-                <div className="flex justify-between font-bold text-base">
-                  <span>Total</span>
-                  <span className="text-[#4A776E]">{formatRupiah(total)}</span>
-                </div>
-              </div>
+               {/* Dashed Line */}
+               <div className="mx-3 border-t border-dashed border-slate-400"></div>
 
-              {/* Bayar Detail */}
-              <div className="px-4 py-3 bg-slate-50/50 border-t border-slate-50 space-y-1 print:bg-white">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Metode</span>
-                  <Badge variant="outline" className="text-xs font-medium border-slate-200 print:border-0 print:bg-transparent">
-                    {metodeLabel[metodePembayaran]}
-                  </Badge>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Bayar</span>
-                  <span className="font-medium text-slate-700">{formatRupiah(bayar)}</span>
-                </div>
-                {kembalian > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Kembalian</span>
-                    <span className="font-medium text-emerald-600">
-                      {formatRupiah(kembalian)}
-                    </span>
-                  </div>
-                )}
-              </div>
+               {/* Items - Simple Table */}
+               <div className="px-3 py-1">
+                 <table className="w-full text-[9px]">
+                   <thead>
+                     <tr className="text-slate-500 border-b border-dotted border-slate-400">
+                       <th className="text-left pb-1">Item</th>
+                       <th className="text-center pb-1">Qty</th>
+                       <th className="text-right pb-1">Subtotal</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {items.map((item, idx) => (
+                       <tr key={`${item.id}-${idx}`}>
+                         <td className="py-1">{item.nama}</td>
+                         <td className="py-1 text-center font-semibold">{item.jumlah}x</td>
+                         <td className="py-1 text-right font-semibold">{formatRupiah(item.harga * item.jumlah)}</td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
 
-              {catatan && (
-                <div className="px-4 py-2 border-t border-slate-50 text-[11px] text-slate-500">
-                  <span className="font-medium">Catatan:</span> {catatan}
-                </div>
-              )}
+               {/* Dashed Line */}
+               <div className="mx-3 border-t border-dashed border-slate-400"></div>
 
-              {/* Footer */}
-              <div className="text-center p-3 border-t border-slate-50 bg-slate-50/30 print:bg-white">
-                <p className="text-[11px] text-slate-500">Terima kasih telah berbelanja</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">
-                  Barang yang sudah dibeli tidak dapat dikembalikan
-                </p>
-              </div>
-            </div>
-          </div>
+               {/* Total - Bold */}
+               <div className="mx-3 py-1.5 border-t-2 border-b border-slate-700">
+                 <div className="flex justify-between font-bold text-[11px]">
+                   <span>TOTAL</span>
+                   <span>{formatRupiah(total)}</span>
+                 </div>
+               </div>
 
-          {/* Actions */}
+               {/* Payment */}
+               <div className="px-3 py-1.5 space-y-0.5 text-[9px]">
+                 <div className="flex justify-between">
+                   <span className="text-slate-600">Bayar</span>
+                   <span className="font-medium">{formatRupiah(bayar)}</span>
+                 </div>
+                 {kembalian > 0 && (
+                   <div className="flex justify-between">
+                     <span className="text-slate-600">Kembalian</span>
+                     <span className="font-medium">{formatRupiah(kembalian)}</span>
+                   </div>
+                 )}
+               </div>
+
+               {/* Catatan */}
+               {catatan && (
+                 <div className="mx-3 mt-1 pt-1 border-t border-dashed border-slate-400 text-[9px]">
+                   <div className="font-bold mb-0.5">Catatan:</div>
+                   <div>{catatan}</div>
+                 </div>
+               )}
+
+               {/* Footer */}
+               <div className="text-center p-2 border-t border-slate-400 mt-1">
+                 <div className="font-bold text-[10px] mb-0.5">~ Terima Kasih ~</div>
+                 <div className="text-[9px] text-slate-600">Barang yang sudah dibeli</div>
+                 <div className="text-[9px] text-slate-600">tidak dapat dikembalikan</div>
+               </div>
+             </div>
+           </div>
+
+           {/* Actions */}
            <DialogFooter className="flex-col sm:flex-col gap-2 px-6 pb-6 pt-2 print:hidden">
-            <Button
-              onClick={handlePrint}
-              variant="outline"
-              className="w-full h-10 border-slate-200 hover:bg-slate-50"
-            >
-              <Printer className="h-4 w-4 mr-2" />
-              Cetak Struk
-            </Button>
-            <Button
-              onClick={() => onOpenChange(false)}
-              className="w-full h-10 bg-[#4A776E] hover:bg-[#4A776E]/90 text-white"
-            >
-              Transaksi Baru
-            </Button>
-          </DialogFooter>
-        </DialogContent>
+             <Button
+               onClick={handlePrint}
+               variant="outline"
+               className="w-full h-10 border-slate-200 hover:bg-slate-50"
+             >
+               <Printer className="h-4 w-4 mr-2" />
+               Cetak Struk
+             </Button>
+             <Button
+               onClick={() => onOpenChange(false)}
+               className="w-full h-10 bg-[#4A776E] hover:bg-[#4A776E]/90 text-white"
+             >
+               Transaksi Baru
+             </Button>
+           </DialogFooter>
+         </DialogContent>
        </Dialog>
-     </>
-   );
+    </>
+  );
 }

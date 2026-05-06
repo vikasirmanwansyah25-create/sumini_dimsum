@@ -216,6 +216,7 @@ export interface Database {
           kategori: string
           harga: number
           jumlah: number
+          harga_beli: number | null
         }
         Insert: {
           id?: string
@@ -225,6 +226,7 @@ export interface Database {
           kategori: string
           harga: number
           jumlah: number
+          harga_beli?: number | null
         }
         Update: {
           id?: string
@@ -234,6 +236,7 @@ export interface Database {
           kategori?: string
           harga?: number
           jumlah?: number
+          harga_beli?: number | null
         }
       }
     }

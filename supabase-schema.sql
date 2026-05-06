@@ -85,7 +85,8 @@ CREATE TABLE IF NOT EXISTS "CartItem" (
     "nama" TEXT NOT NULL,
     "kategori" TEXT NOT NULL,
     "harga" INTEGER NOT NULL,
-    "jumlah" INTEGER NOT NULL
+    "jumlah" INTEGER NOT NULL,
+    "harga_beli" INTEGER DEFAULT 0
 );
 
 -- Indexes

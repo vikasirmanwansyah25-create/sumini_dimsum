@@ -23,7 +23,6 @@ import {
   Upload,
   X,
   QrCode,
-  Camera,
 } from "lucide-react";
 
 interface CheckoutDialogProps {
@@ -117,23 +116,35 @@ export function CheckoutDialog({
 
   const handleBayar = () => {
     if (metode === "TUNAI") {
-      if (kembalian < 0) {
+      const bayar = parseInt(bayarAmount || "0");
+      if (bayar < 500) {
+        alert("Jumlah uang minimal Rp 500!");
+        return;
+      }
+      if (bayar < total) {
         alert("Jumlah bayar kurang dari total!");
         return;
       }
-      onCheckout(metode, parseInt(bayarAmount || "0"), Math.max(0, kembalian), catatan, keterangan || undefined, buktiPembayaran || undefined);
+      onCheckout(metode, bayar, Math.max(0, bayar - total), catatan, keterangan || undefined, buktiPembayaran || undefined);
     } else if (metode === "QUIRZ") {
       if (!buktiPembayaran) {
         alert("Harap upload bukti pembayaran QRIS!");
         return;
       }
-      onCheckout(metode, total, 0, catatan, keterangan || undefined, buktiPembayaran);
+      if (!keterangan.trim()) {
+        alert("Keterangan wajib diisi untuk pembayaran QRIS!");
+        return;
+      }
+      onCheckout(metode, total, 0, catatan, keterangan, buktiPembayaran);
     }
   };
 
   const isBayarValid = () => {
-    if (metode === "TUNAI") return kembalian >= 0 && bayarAmount !== "";
-    if (metode === "QUIRZ") return !!buktiPembayaran;
+    if (metode === "TUNAI") {
+      const bayar = parseInt(bayarAmount || "0");
+      return bayar >= 500 && bayar >= total;
+    }
+    if (metode === "QUIRZ") return !!buktiPembayaran && keterangan.trim() !== "";
     return false;
   };
 
@@ -273,17 +284,25 @@ export function CheckoutDialog({
                 <div className="space-y-3">
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-slate-700">
-                      Jumlah Uang Diterima
+                      Jumlah Uang Diterima <span className="text-rose-500">*</span>
                     </label>
                     <Input
                       type="number"
                       value={bayarAmount}
-                      onChange={(e) => setBayarAmount(e.target.value)}
-                      placeholder="Masukkan jumlah uang"
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (val < 500 && val > 0) return;
+                        setBayarAmount(e.target.value);
+                      }}
+                      placeholder="Minimal Rp 500"
+                      min="500"
                       className="h-11 text-base border-slate-200 focus-visible:ring-[#4A776E]"
                     />
+                    {bayarAmount && parseInt(bayarAmount) < 500 && (
+                      <p className="text-xs text-rose-500 mt-1">Jumlah uang minimal Rp 500</p>
+                    )}
                   </div>
-                  {bayarAmount && kembalian >= 0 && (
+                  {bayarAmount && parseInt(bayarAmount) >= 500 && kembalian >= 0 && (
                     <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
                       <p className="text-xs text-emerald-600 font-medium">Kembalian</p>
                       <p className="text-xl font-bold text-emerald-600">
@@ -291,7 +310,7 @@ export function CheckoutDialog({
                       </p>
                     </div>
                   )}
-                  {bayarAmount && kembalian < 0 && (
+                  {bayarAmount && parseInt(bayarAmount) >= 500 && kembalian < 0 && (
                     <div className="bg-rose-50 rounded-xl p-3 border border-rose-100">
                       <p className="text-xs text-rose-600 font-medium">Kurang</p>
                       <p className="text-xl font-bold text-rose-600">
@@ -338,65 +357,49 @@ export function CheckoutDialog({
                     <label className="text-sm font-medium text-slate-700">
                       Bukti Pembayaran <span className="text-rose-500">*</span>
                     </label>
-                    {buktiPembayaran ? (
-                      <div className="relative rounded-xl border border-slate-200 overflow-hidden">
-                        <img
-                          src={buktiPembayaran}
-                          alt="Bukti pembayaran QRIS"
-                          className="w-full h-48 object-contain bg-slate-50"
-                        />
-                        <button
-                          onClick={removeBukti}
-                          className="absolute top-2 right-2 p-1.5 rounded-lg bg-rose-500 text-white hover:bg-rose-600 transition-colors"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-2">
-                        <label className="flex flex-col items-center justify-center flex-1 h-32 rounded-xl border-2 border-dashed border-slate-300 hover:border-[#4A776E] hover:bg-[#4A776E]/10/30 transition-all cursor-pointer">
-                          <Upload className="h-8 w-8 text-slate-400 mb-2" />
-                          <p className="text-sm text-slate-500">
-                            <span className="font-medium text-[#4A776E]">Upload File</span>
-                          </p>
-                          <p className="text-xs text-slate-400 mt-1">PNG, JPG (max 5MB)</p>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                          />
-                        </label>
-                        <label className="flex flex-col items-center justify-center flex-1 h-32 rounded-xl border-2 border-dashed border-slate-300 hover:border-[#4A776E] hover:bg-[#4A776E]/10/30 transition-all cursor-pointer">
-                          <Camera className="h-8 w-8 text-slate-400 mb-2" />
-                          <p className="text-sm text-slate-500">
-                            <span className="font-medium text-[#4A776E]">Camera</span>
-                          </p>
-                          <p className="text-xs text-slate-400 mt-1">Ambil foto langsung</p>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            capture="environment"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
-                    )}
+                  {buktiPembayaran ? (
+                       <div className="relative rounded-xl border border-slate-200 overflow-hidden">
+                         <img
+                           src={buktiPembayaran}
+                           alt="Bukti pembayaran QRIS"
+                           className="w-full h-48 object-contain bg-slate-50"
+                         />
+                         <button
+                           onClick={removeBukti}
+                           className="absolute top-2 right-2 p-1.5 rounded-lg bg-rose-500 text-white hover:bg-rose-600 transition-colors"
+                         >
+                           <X className="h-4 w-4" />
+                         </button>
+                       </div>
+                     ) : (
+                       <label className="flex flex-col items-center justify-center h-32 rounded-xl border-2 border-dashed border-slate-300 hover:border-[#4A776E] hover:bg-[#4A776E]/10 transition-all cursor-pointer">
+                         <Upload className="h-8 w-8 text-slate-400 mb-2" />
+                         <p className="text-sm text-slate-500">
+                           <span className="font-medium text-[#4A776E]">Upload File</span>
+                         </p>
+                         <p className="text-xs text-slate-400 mt-1">PNG, JPG (max 5MB)</p>
+                         <input
+                           type="file"
+                           accept="image/*"
+                           onChange={handleFileUpload}
+                           className="hidden"
+                         />
+                       </label>
+                     )}
                   </div>
 
                   {/* Keterangan */}
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-slate-700">
-                      Keterangan <span className="text-slate-400">(opsional)</span>
-                    </label>
-                    <Textarea
-                      value={keterangan}
-                      onChange={(e) => setKeterangan(e.target.value)}
-                      placeholder="Contoh: Pembayaran dari GoPay, OVO, dll..."
-                      className="min-h-[80px] border-slate-200 focus-visible:ring-[#4A776E] resize-none"
-                    />
-                  </div>
+                   <div className="space-y-1.5">
+                     <label className="text-sm font-medium text-slate-700">
+                       Keterangan <span className="text-rose-500">*</span>
+                     </label>
+                     <Textarea
+                       value={keterangan}
+                       onChange={(e) => setKeterangan(e.target.value)}
+                       placeholder="Contoh: Pembayaran dari GoPay, OVO, dll..."
+                       className="min-h-[80px] border-slate-200 focus-visible:ring-[#4A776E] resize-none"
+                     />
+                   </div>
                 </div>
               )}
 

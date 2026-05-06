@@ -285,18 +285,21 @@ export default function InventoryPage() {
   return (
     <div className="space-y-4 lg:space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="space-y-3">
         <div>
-          <h1 className="text-xl lg:text-2xl font-bold text-slate-900 tracking-tight">Inventory</h1>
-          <p className="text-xs lg:text-sm text-slate-500 mt-0.5">Kelola bahan baku dimsum</p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">Inventory</h1>
+          <p className="text-sm lg:text-base text-slate-500 flex items-center gap-1">
+            <MapPin className="h-3.5 w-3.5" />
+            Kelola bahan baku
+          </p>
         </div>
-          <Button
-            onClick={() => handleOpenDialog()}
-            className="bg-[#4A776E] hover:bg-[#4A776E]/90 text-white"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Tambah Bahan
-          </Button>
+        <Button
+          onClick={() => handleOpenDialog()}
+          className="bg-[#4A776E] hover:bg-[#4A776E]/90 text-white w-full sm:w-auto"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Tambah Bahan
+        </Button>
       </div>
 
       <Card className="border border-slate-100 shadow-sm">
