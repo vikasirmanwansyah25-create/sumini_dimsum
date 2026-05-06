@@ -91,14 +91,24 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
-    const cartItems = items.map((item: any) => ({
-      id: `CI-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      transaksiId: transaksi.id,
-      menuId: item.menuId || item.id,
-      nama: item.nama,
-      kategori: item.kategori || "Lainnya",
-      harga: Number(item.harga),
-      jumlah: Number(item.jumlah),
+    const cartItems = await Promise.all(items.map(async (item: any) => {
+      const menuId = item.menuId || item.id;
+      const { data: menu } = await supabase
+        .from('Menu')
+        .select('harga_beli')
+        .eq('id', menuId)
+        .single();
+
+      return {
+        id: `CI-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        transaksiId: transaksi.id,
+        menuId: menuId,
+        nama: item.nama,
+        kategori: item.kategori || "Lainnya",
+        harga: Number(item.harga),
+        jumlah: Number(item.jumlah),
+        harga_beli: menu?.harga_beli || 0,
+      };
     }));
 
     const { error: itemsError } = await supabase

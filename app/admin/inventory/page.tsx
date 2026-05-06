@@ -482,7 +482,7 @@ export default function InventoryPage() {
           <div className="grid gap-3 lg:gap-4 py-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-700">Nama Bahan</label>
+                <label className="text-sm font-medium text-slate-700">Nama Bahan <span className="text-red-500">*</span></label>
                 <Input
                   value={formData.nama}
                   onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
@@ -491,7 +491,7 @@ export default function InventoryPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-700">Jenis Bahan</label>
+                <label className="text-sm font-medium text-slate-700">Jenis Bahan <span className="text-red-500">*</span></label>
                 <Select
                   value={formData.jenisProduk}
                   onValueChange={handleJenisChange}
@@ -512,7 +512,9 @@ export default function InventoryPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-700">Rasa</label>
+                <label className="text-sm font-medium text-slate-700">
+                  Rasa {!["Pengemasan", "Operasional"].includes(formData.jenisProduk) && <span className="text-red-500">*</span>}
+                </label>
                 <Input
                    value={formData.rasa}
                    onChange={(e) => setFormData({ ...formData, rasa: e.target.value })}
@@ -524,7 +526,7 @@ export default function InventoryPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700">Gambar</label>
+              <label className="text-sm font-medium text-slate-700">Gambar <span className="text-red-500">*</span></label>
               <div className="flex items-center gap-3 lg:gap-4">
               <label className="cursor-pointer flex items-center gap-2 px-3 lg:px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition text-sm text-slate-600">
                 {uploading ? (
@@ -558,7 +560,7 @@ export default function InventoryPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700">Cabang</label>
+              <label className="text-sm font-medium text-slate-700">Cabang <span className="text-red-500">*</span></label>
               <Select
                 value={formData.cabangId}
                 onValueChange={(val) => setFormData({ ...formData, cabangId: val })}
@@ -589,7 +591,7 @@ export default function InventoryPage() {
                    />
               </div>
               <div className="space-y-1.5 col-span-2 lg:col-span-1">
-                <label className="text-sm font-medium text-slate-700">Stok</label>
+                <label className="text-sm font-medium text-slate-700">Stok <span className="text-red-500">*</span></label>
                 <div className="flex gap-2">
                   <Input
                      type="number"
@@ -622,7 +624,7 @@ export default function InventoryPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700">Deskripsi</label>
+              <label className="text-sm font-medium text-slate-700">Deskripsi <span className="text-red-500">*</span></label>
               <Input
                 value={formData.deskripsi}
                 onChange={(e) => setFormData({ ...formData, deskripsi: e.target.value })}

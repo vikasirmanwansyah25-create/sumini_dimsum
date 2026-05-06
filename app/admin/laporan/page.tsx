@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatRupiah, formatDate, formatTime } from "@/lib/utils";
+import { formatRupiah, formatDateTime } from "@/lib/utils";
 import * as XLSX from "xlsx";
 
 export default function LaporanPage() {
@@ -39,13 +39,7 @@ export default function LaporanPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const totalPenjualan = transaksi.reduce((sum, trx) => sum + trx.total, 0);
-  const totalLaba = transaksi.reduce((sum, trx) => {
-    return sum + trx.items.reduce((is, item) => is + (item.harga - (item.menu?.hargaBeli ?? 0)) * item.jumlah, 0);
-  }, 0);
-  const totalModal = transaksi.reduce((sum, trx) => {
-    return sum + trx.items.reduce((is, item) => is + (item.menu?.hargaBeli ?? 0) * item.jumlah, 0);
-  }, 0);
+
 
   const exportToExcel = (data: any[], filename: string) => {
     const worksheet = XLSX.utils.json_to_sheet(data);
@@ -55,31 +49,45 @@ export default function LaporanPage() {
   };
 
   const handleExportAll = () => {
-    const data = transaksi.map((trx: any) => ({
-      "ID": trx.id.slice(-8).toUpperCase(),
-      "Waktu": `${formatDate(trx.tanggal)} ${formatTime(trx.tanggal)}`,
-      "Item": trx.items.map((i: any) => `${i.jumlah}x ${i.nama}`).join(", "),
-      "Total": trx.total,
-      "Metode": trx.metodePembayaran === "QUIRZ" ? "QRIS" : trx.metodePembayaran,
-    }));
+    const data: any[] = [];
+    transaksi.forEach((trx: any) => {
+      trx.items.forEach((item: any, idx: number) => {
+        data.push({
+          "ID": idx === 0 ? trx.id.slice(-8).toUpperCase() : "",
+          "Waktu": idx === 0 ? formatDateTime(trx.tanggal) : "",
+          "Kasir": idx === 0 ? (trx.user?.cabang?.nama ?? "-") : "",
+          "Item": item.nama,
+          "Total Item": item.jumlah,
+          "Harga Satuan": item.harga,
+          "Subtotal": item.harga * item.jumlah,
+          "Metode": idx === 0 ? (trx.metodePembayaran === "QUIRZ" ? "QRIS" : trx.metodePembayaran) : "",
+          "Total Transaksi": idx === 0 ? trx.total : "",
+        });
+      });
+    });
     exportToExcel(data, `Laporan_Semua_Cabang_${new Date().toISOString().slice(0, 10)}`);
   };
 
   const handleExportCabang = (cabangId: string, cabangNama: string) => {
     const filtered = transaksi.filter((trx: any) => trx.user?.cabang?.id === cabangId);
+    const data: any[] = [];
+    
+    filtered.forEach((trx: any) => {
+      trx.items.forEach((item: any, idx: number) => {
+        data.push({
+          "ID": idx === 0 ? trx.id.slice(-8).toUpperCase() : "",
+          "Waktu": idx === 0 ? formatDateTime(trx.tanggal) : "",
+          "Item": item.nama,
+          "Total Item": item.jumlah,
+          "Harga Satuan": item.harga,
+          "Subtotal": item.harga * item.jumlah,
+          "Metode": idx === 0 ? (trx.metodePembayaran === "QUIRZ" ? "QRIS" : trx.metodePembayaran) : "",
+          "Total Transaksi": idx === 0 ? trx.total : "",
+        });
+      });
+    });
 
-    const detailData = filtered.map((trx: any) => ({
-      "ID": trx.id.slice(-8).toUpperCase(),
-      "Waktu": `${formatDate(trx.tanggal)} ${formatTime(trx.tanggal)}`,
-      "Item": trx.items.map((i: any) => `${i.jumlah}x ${i.nama}`).join(", "),
-      "Total": trx.total,
-      "Metode": trx.metodePembayaran === "QUIRZ" ? "QRIS" : trx.metodePembayaran,
-    }));
-
-    const workbook = XLSX.utils.book_new();
-    const wsDetail = XLSX.utils.json_to_sheet(detailData);
-    XLSX.utils.book_append_sheet(workbook, wsDetail, "Laporan Penjualan");
-    XLSX.writeFile(workbook, `Laporan_${cabangNama}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    exportToExcel(data, `Laporan_${cabangNama}_${new Date().toISOString().slice(0, 10)}`);
   };
 
   const cabangMap = new Map();
@@ -107,53 +115,13 @@ export default function LaporanPage() {
         <p className="text-xs lg:text-sm text-charcoal-500">Riwayat transaksi & perhitungan laba rugi</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
-        <Card>
-          <CardContent className="p-4 lg:p-6">
-            <div className="flex items-center gap-3 lg:gap-4">
-              <div className="p-2 lg:p-3 bg-green-100 rounded-xl">
-                <DollarSign className="h-4 lg:h-6 w-4 lg:w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-xs lg:text-sm text-charcoal-500">Total Penjualan</p>
-                <p className="text-sm lg:text-xl font-bold text-green-600">{formatRupiah(totalPenjualan)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 lg:p-6">
-            <div className="flex items-center gap-3 lg:gap-4">
-              <div className="p-2 lg:p-3 bg-navy-100 rounded-xl">
-                <TrendingUp className="h-4 lg:h-6 w-4 lg:w-6 text-navy-700" />
-              </div>
-              <div>
-                <p className="text-xs lg:text-sm text-charcoal-500">Total Laba</p>
-                <p className="text-sm lg:text-xl font-bold text-navy-700">{formatRupiah(totalLaba)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 lg:p-6">
-            <div className="flex items-center gap-3 lg:gap-4">
-              <div className="p-2 lg:p-3 bg-blue-100 rounded-xl">
-                <Calendar className="h-4 lg:h-6 w-4 lg:w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-xs lg:text-sm text-charcoal-500">Total Modal</p>
-                <p className="text-sm lg:text-xl font-bold text-blue-600">{formatRupiah(totalModal)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+
 
       <Tabs defaultValue="semua">
-        <TabsList>
-          <TabsTrigger value="semua">Semua Transaksi</TabsTrigger>
+        <TabsList className="bg-[#4B736A] text-white">
+          <TabsTrigger value="semua" className="data-[state=active]:bg-white data-[state=active]:text-[#4B736A]">Semua Transaksi</TabsTrigger>
           {cabangIds.map((cid) => (
-            <TabsTrigger key={cid} value={cid}>{cabangMap.get(cid)}</TabsTrigger>
+            <TabsTrigger key={cid} value={cid} className="data-[state=active]:bg-white data-[state=active]:text-[#4B736A]">{cabangMap.get(cid)}</TabsTrigger>
           ))}
         </TabsList>
 
@@ -172,139 +140,154 @@ export default function LaporanPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {transaksi.length === 0 ? (
-                <div className="text-center py-12">
-                  <FileText className="h-12 w-12 mx-auto text-charcoal-300 mb-3" />
-                  <p className="text-lg text-charcoal-500">Belum ada transaksi</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Tanggal</TableHead>
-                      <TableHead>Kasir</TableHead>
-                      <TableHead>Item</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Metode</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Aksi</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {transaksi.map((trx) => (
-                      <TableRow key={trx.id}>
-                        <TableCell className="font-medium">#{trx.id.slice(-6).toUpperCase()}</TableCell>
-                        <TableCell>
-                          <div>
-                            <p>{formatDate(trx.tanggal)}</p>
-                            <p className="text-xs text-charcoal-500">{formatTime(trx.tanggal)}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>{trx.user?.cabang?.nama ?? "-"}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {trx.items.slice(0, 2).map((item, idx) => (
-                              <Badge key={idx} variant="secondary">{item.jumlah}x {item.nama}</Badge>
-                            ))}
-                            {trx.items.length > 2 && <Badge variant="outline">+{trx.items.length - 2}</Badge>}
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium">{formatRupiah(trx.total)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Badge variant="outline">{trx.metodePembayaran}</Badge>
-                            {trx.buktiPembayaran && (
-                              <ImageIcon className="h-3.5 w-3.5 text-amber-500" />
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Selesai</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSelectedTransaksi(trx)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Eye className="h-4 w-4 text-slate-500" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+               {transaksi.length === 0 ? (
+                 <div className="text-center py-12">
+                   <FileText className="h-12 w-12 mx-auto text-charcoal-300 mb-3" />
+                   <p className="text-lg text-charcoal-500">Belum ada transaksi</p>
+                 </div>
+               ) : (
+                 <Table>
+                   <TableHeader>
+                     <TableRow>
+                       <TableHead>ID</TableHead>
+                       <TableHead>Tanggal & Waktu</TableHead>
+                       <TableHead>Kasir</TableHead>
+                       <TableHead>Item</TableHead>
+                       <TableHead>Total Item</TableHead>
+                       <TableHead>Total</TableHead>
+                       <TableHead>Metode</TableHead>
+                       <TableHead>Status</TableHead>
+                       <TableHead className="text-right">Aksi</TableHead>
+                     </TableRow>
+                   </TableHeader>
+                   <TableBody>
+                     {transaksi.map((trx) => (
+                       <TableRow key={trx.id}>
+                         <TableCell className="font-medium">#{trx.id.slice(-6).toUpperCase()}</TableCell>
+                         <TableCell>
+                           <p>{formatDateTime(trx.tanggal)}</p>
+                         </TableCell>
+                         <TableCell>{trx.user?.cabang?.nama ?? "-"}</TableCell>
+                         <TableCell>
+                           <div className="flex flex-wrap gap-1">
+                             {trx.items.slice(0, 2).map((item, idx) => (
+                               <Badge key={idx} variant="secondary">{item.nama}</Badge>
+                             ))}
+                             {trx.items.length > 2 && <Badge variant="outline">+{trx.items.length - 2}</Badge>}
+                           </div>
+                         </TableCell>
+                         <TableCell>
+                           <div className="flex flex-wrap gap-1">
+                             {trx.items.slice(0, 2).map((item, idx) => (
+                               <Badge key={idx} variant="outline">{item.jumlah}x</Badge>
+                             ))}
+                             {trx.items.length > 2 && <Badge variant="outline">+{trx.items.length - 2}</Badge>}
+                           </div>
+                         </TableCell>
+                         <TableCell className="font-medium">{formatRupiah(trx.total)}</TableCell>
+                         <TableCell>
+                           <div className="flex items-center gap-1">
+                             <Badge variant="outline">{trx.metodePembayaran}</Badge>
+                             {trx.buktiPembayaran && (
+                               <ImageIcon className="h-3.5 w-3.5 text-amber-500" />
+                             )}
+                           </div>
+                         </TableCell>
+                         <TableCell>
+                           <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Selesai</Badge>
+                         </TableCell>
+                         <TableCell className="text-right">
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => setSelectedTransaksi(trx)}
+                             className="h-8 w-8 p-0"
+                           >
+                             <Eye className="h-4 w-4 text-slate-500" />
+                           </Button>
+                         </TableCell>
+                       </TableRow>
+                     ))}
+                   </TableBody>
+                 </Table>
+               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {cabangIds.map((cid) => (
-          <TabsContent key={cid} value={cid}>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Transaksi {cabangMap.get(cid)}</span>
-                  <Button onClick={() => handleExportCabang(cid, cabangMap.get(cid))} size="sm" className="gap-2 bg-[#4A776E] hover:bg-[#4A776E]/90">
-                    <Download className="h-4 w-4" />
-                    Export Excel
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Waktu</TableHead>
-                      <TableHead>Item</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Metode</TableHead>
-                      <TableHead className="text-right">Aksi</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {transaksi.filter((trx) => trx.user?.cabang?.id === cid).map((trx) => (
-                      <TableRow key={trx.id}>
-                        <TableCell className="font-medium">#{trx.id.slice(-6).toUpperCase()}</TableCell>
-                        <TableCell>{formatTime(trx.tanggal)}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {trx.items.slice(0, 2).map((item, idx) => (
-                              <Badge key={idx} variant="secondary">{item.jumlah}x {item.nama}</Badge>
-                            ))}
-                            {trx.items.length > 2 && <Badge variant="outline">+{trx.items.length - 2}</Badge>}
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium">{formatRupiah(trx.total)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Badge variant="outline">{trx.metodePembayaran}</Badge>
-                            {trx.buktiPembayaran && (
-                              <ImageIcon className="h-3.5 w-3.5 text-amber-500" />
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setSelectedTransaksi(trx)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Eye className="h-4 w-4 text-slate-500" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        ))}
+         {cabangIds.map((cid) => (
+           <TabsContent key={cid} value={cid}>
+             <Card>
+               <CardHeader>
+                 <CardTitle className="flex items-center justify-between">
+                   <span>Transaksi {cabangMap.get(cid)}</span>
+                   <Button onClick={() => handleExportCabang(cid, cabangMap.get(cid))} size="sm" className="gap-2 bg-[#4A776E] hover:bg-[#4A776E]/90">
+                     <Download className="h-4 w-4" />
+                     Export Excel
+                   </Button>
+                 </CardTitle>
+               </CardHeader>
+               <CardContent>
+                 <Table>
+                   <TableHeader>
+                     <TableRow>
+                       <TableHead>ID</TableHead>
+                       <TableHead>Tanggal & Waktu</TableHead>
+                       <TableHead>Item</TableHead>
+                       <TableHead>Total Item</TableHead>
+                       <TableHead>Total</TableHead>
+                       <TableHead>Metode</TableHead>
+                       <TableHead className="text-right">Aksi</TableHead>
+                     </TableRow>
+                   </TableHeader>
+                   <TableBody>
+                     {transaksi.filter((trx) => trx.user?.cabang?.id === cid).map((trx) => (
+                       <TableRow key={trx.id}>
+                         <TableCell className="font-medium">#{trx.id.slice(-6).toUpperCase()}</TableCell>
+                         <TableCell>{formatDateTime(trx.tanggal)}</TableCell>
+                         <TableCell>
+                           <div className="flex flex-wrap gap-1">
+                             {trx.items.slice(0, 2).map((item, idx) => (
+                               <Badge key={idx} variant="secondary">{item.nama}</Badge>
+                             ))}
+                             {trx.items.length > 2 && <Badge variant="outline">+{trx.items.length - 2}</Badge>}
+                           </div>
+                         </TableCell>
+                         <TableCell>
+                           <div className="flex flex-wrap gap-1">
+                             {trx.items.slice(0, 2).map((item, idx) => (
+                               <Badge key={idx} variant="outline">{item.jumlah}x</Badge>
+                             ))}
+                             {trx.items.length > 2 && <Badge variant="outline">+{trx.items.length - 2}</Badge>}
+                           </div>
+                         </TableCell>
+                         <TableCell className="font-medium">{formatRupiah(trx.total)}</TableCell>
+                         <TableCell>
+                           <div className="flex items-center gap-1">
+                             <Badge variant="outline">{trx.metodePembayaran}</Badge>
+                             {trx.buktiPembayaran && (
+                               <ImageIcon className="h-3.5 w-3.5 text-amber-500" />
+                             )}
+                           </div>
+                         </TableCell>
+                         <TableCell className="text-right">
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => setSelectedTransaksi(trx)}
+                             className="h-8 w-8 p-0"
+                           >
+                             <Eye className="h-4 w-4 text-slate-500" />
+                           </Button>
+                         </TableCell>
+                       </TableRow>
+                     ))}
+                   </TableBody>
+                 </Table>
+               </CardContent>
+             </Card>
+           </TabsContent>
+         ))}
       </Tabs>
 
       {/* Detail Dialog */}
@@ -320,10 +303,10 @@ export default function LaporanPage() {
             <div className="space-y-4">
               {/* Info */}
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-slate-500">Tanggal</p>
-                  <p className="font-medium">{formatDate(selectedTransaksi.tanggal)} {formatTime(selectedTransaksi.tanggal)}</p>
-                </div>
+                 <div>
+                   <p className="text-slate-500">Tanggal & Waktu</p>
+                   <p className="font-medium">{formatDateTime(selectedTransaksi.tanggal)}</p>
+                 </div>
                 <div>
                   <p className="text-slate-500">Kasir</p>
                   <p className="font-medium">{selectedTransaksi.user?.cabang?.nama ?? "-"}</p>
