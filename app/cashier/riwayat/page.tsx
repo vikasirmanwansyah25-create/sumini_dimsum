@@ -20,7 +20,7 @@ interface CartItemData {
   nama: string;
   rasa: string;
   jumlah: number;
-  hargaJual: number;
+  harga: number;
 }
 
 interface TransaksiData {
@@ -55,7 +55,7 @@ export default function RiwayatPage() {
   }, [currentUser?.id]);
 
   const totalTransaksi = transaksi.length;
-  const totalPenjualan = transaksi.reduce((sum, trx) => sum + trx.total, 0);
+  const totalPenjualan = transaksi.reduce((sum, trx) => sum + (trx.total || 0), 0);
 
   if (loading) {
     return (
@@ -221,9 +221,9 @@ export default function RiwayatPage() {
                   <div key={idx} className="flex justify-between items-center px-3 py-2">
                     <div>
                       <p className="font-medium text-sm">{item.nama}</p>
-                      <p className="text-xs text-slate-500">{item.jumlah} × {formatRupiah(item.hargaJual)}</p>
+                      <p className="text-xs text-slate-500">{item.jumlah} × {formatRupiah(item.harga)}</p>
                     </div>
-                    <span className="font-semibold text-sm">{formatRupiah(item.hargaJual * item.jumlah)}</span>
+                    <span className="font-semibold text-sm">{formatRupiah(item.harga * item.jumlah)}</span>
                   </div>
                 ))}
                 <div className="px-3 py-2 bg-slate-50 flex justify-between font-bold text-sm">
