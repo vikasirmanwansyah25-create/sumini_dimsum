@@ -215,7 +215,8 @@ export default function UsersPage() {
                 <TableHead>Role</TableHead>
                 <TableHead>Cabang</TableHead>
                 <TableHead>Tanggal Dibuat</TableHead>
-                <TableHead>Aksi</TableHead>
+                <TableHead>Edit</TableHead>
+                <TableHead>Hapus</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -244,26 +245,27 @@ export default function UsersPage() {
                   </TableCell>
                   <TableCell>{formatDate(user.createdAt)}</TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleOpenDialog(user.id)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setSelectedUserId(user.id);
-                          setIsDeleteDialogOpen(true);
-                        }}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleOpenDialog(user.id)}
+                      className="h-8 w-8 text-slate-500 hover:text-[#4A776E] hover:bg-[#4A776E]/10"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedUserId(user.id);
+                        setIsDeleteDialogOpen(true);
+                      }}
+                      className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

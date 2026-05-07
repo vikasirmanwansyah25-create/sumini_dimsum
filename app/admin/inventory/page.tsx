@@ -347,13 +347,14 @@ export default function InventoryPage() {
                    <TableHead className="text-xs font-semibold text-slate-600">Cabang</TableHead>
                    <TableHead className="text-xs font-semibold text-slate-600">Stok</TableHead>
                    <TableHead className="text-xs font-semibold text-slate-600">Berat</TableHead>
-                   <TableHead className="text-xs font-semibold text-slate-600">Edit</TableHead>
+                    <TableHead className="text-xs font-semibold text-slate-600">Edit</TableHead>
+                    <TableHead className="text-xs font-semibold text-slate-600">Hapus</TableHead>
                  </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12">
+                    <TableCell colSpan={9} className="text-center py-12">
                       <div className="flex flex-col items-center gap-2">
                         <Loader2 className="h-6 w-6 animate-spin text-[#4A776E]" />
                         <p className="text-sm text-slate-500">Memuat data...</p>
@@ -362,7 +363,7 @@ export default function InventoryPage() {
                   </TableRow>
                 ) : filteredBahan.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12">
+                    <TableCell colSpan={9} className="text-center py-12">
                       <div className="flex flex-col items-center gap-2">
                         <Package className="h-8 w-8 text-slate-300" />
                         <p className="text-sm text-slate-500">Tidak ada bahan</p>
@@ -443,27 +444,27 @@ export default function InventoryPage() {
                       </TableCell>
                       <TableCell className="text-sm text-slate-600">{p.berat}g</TableCell>
                       <TableCell>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-slate-500 hover:text-[#4A776E] hover:bg-[#4A776E]/10"
-                            onClick={() => handleOpenDialog(p)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-slate-500 hover:text-rose-600 hover:bg-rose-50"
-                            onClick={() => {
-                              setSelectedBahan(p);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-slate-500 hover:text-[#4A776E] hover:bg-[#4A776E]/10"
+                          onClick={() => handleOpenDialog(p)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => {
+                            setSelectedBahan(p);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))

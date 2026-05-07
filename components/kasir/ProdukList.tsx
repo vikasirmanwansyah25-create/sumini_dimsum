@@ -85,23 +85,25 @@ export function ProdukList({ filterKategori, onFilterChange, onAddItem, cabangId
 
       {/* Search & Filter */}
       <div className="flex flex-col sm:flex-row gap-2 lg:gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#4A776E]" />
           <Input
             placeholder="Cari menu..."
-            className="pl-9 lg:pl-10 h-10 bg-white border-slate-200 rounded-lg"
+            className="pl-9 lg:pl-10 h-10 bg-white border-2 border-[#4A776E] focus:border-[#4A776E] focus:outline-none focus:ring-0 rounded-lg w-full box-border"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <Select value={filterKategori} onValueChange={onFilterChange}>
-          <SelectTrigger className="w-full sm:w-32 lg:w-40 bg-white border-slate-200 rounded-lg">
-            <Filter className="h-4 w-4 text-slate-400 mr-2" />
-            <SelectValue placeholder="Kategori" />
+          <SelectTrigger className="w-full sm:w-32 lg:w-40 bg-white border-2 border-[#4A776E] focus:border-[#4A776E] focus:outline-none focus:ring-0 rounded-lg text-center">
+            <div className="flex items-center justify-center w-full gap-2">
+              <Filter className="h-4 w-4 text-[#4A776E] shrink-0" />
+              <span className="flex-1 text-center">{filterKategori}</span>
+            </div>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="border-2 border-[#4A776E]">
             {kategoriOptions.map((kat) => (
-              <SelectItem key={kat} value={kat as string}>
+              <SelectItem key={kat} value={kat as string} className="text-center justify-center">
                 {kat}
               </SelectItem>
             ))}

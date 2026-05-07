@@ -1,26 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "../../../../lib/supabaseClient";
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const body = await req.json();
-    const { buktiPenjualan } = body;
     const { id } = await params;
 
-    const { data: transaksi, error } = await supabase
+    const { data: existing, error: checkError } = await supabase
       .from('Transaksi')
-      .update({ buktiPenjualan: buktiPenjualan })
+      .select('id')
       .eq('id', id)
-      .select()
       .single();
+
+    if (checkError || !existing) {
+      return NextResponse.json(
+        { success: false, message: "Transaksi tidak ditemukan" },
+        { status: 404 }
+      );
+    }
+
+    const { error: itemsError } = await supabase
+      .from('CartItem')
+      .delete()
+      .eq('transaksiId', id);
+
+    if (itemsError) throw itemsError;
+
+    const { error } = await supabase
+      .from('Transaksi')
+      .delete()
+      .eq('id', id);
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true, data: transaksi });
+    return NextResponse.json({ success: true, message: "Transaksi berhasil dihapus" });
   } catch (error) {
-    console.error("PATCH /api/transaksi/[id] error:", error);
+    console.error("DELETE /api/transaksi/[id] error:", error);
     return NextResponse.json(
-      { success: false, message: "Gagal mengupdate transaksi" },
+      { success: false, message: "Gagal menghapus transaksi" },
       { status: 500 }
     );
   }

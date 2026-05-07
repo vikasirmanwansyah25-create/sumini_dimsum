@@ -320,13 +320,14 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                   <TableHead className="text-xs font-semibold text-slate-600">Cabang</TableHead>
                   <TableHead className="text-xs font-semibold text-slate-600">Harga</TableHead>
                   <TableHead className="text-xs font-semibold text-slate-600">Status</TableHead>
-                  <TableHead className="text-xs font-semibold text-slate-600">Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
+                    <TableHead className="text-xs font-semibold text-slate-600 text-right">Edit</TableHead>
+                    <TableHead className="text-xs font-semibold text-slate-600 text-right">Hapus</TableHead>
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-12">
+                    <TableCell colSpan={8} className="text-center py-12">
                       <div className="flex flex-col items-center gap-2">
                         <Loader2 className="h-6 w-6 animate-spin text-[#26B0AC]" />
                         <p className="text-sm text-slate-500">Memuat data...</p>
@@ -335,7 +336,7 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                   </TableRow>
                 ) : filteredProduk.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-12">
+                    <TableCell colSpan={8} className="text-center py-12">
                       <div className="flex flex-col items-center gap-2">
                         <ShoppingBag className="h-8 w-8 text-slate-300" />
                         <p className="text-sm text-slate-500">Tidak ada produk</p>
@@ -387,7 +388,7 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-1">
+                        <div className="flex justify-center">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -396,10 +397,14 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-center">
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-slate-500 hover:text-rose-600 hover:bg-rose-50"
+                            className="h-8 w-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
                             onClick={() => {
                               setSelectedProduk(p);
                               setIsDeleteDialogOpen(true);

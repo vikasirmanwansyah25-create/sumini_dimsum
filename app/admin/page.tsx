@@ -184,13 +184,13 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
               <div>
-              <div className="mb-3 lg:mb-4 flex gap-1 bg-slate-100 p-1 rounded-lg w-fit h-7 lg:h-8">
+              <div className="mb-3 lg:mb-4 flex gap-1 bg-white border border-slate-200 p-1 rounded-lg w-fit h-7 lg:h-8">
                 <button
                   onClick={() => setChartPeriod("7hari")}
                   className={`text-xs px-3 rounded-md transition-all ${
                     chartPeriod === "7hari"
-                      ? "bg-white shadow-sm text-slate-800"
-                      : "text-slate-500 hover:text-slate-700"
+                      ? "bg-[#4B736A] shadow-sm text-white"
+                      : "text-slate-700 hover:text-slate-900 bg-white"
                   }`}
                 >
                   7 Hari
@@ -199,8 +199,8 @@ export default function AdminDashboard() {
                   onClick={() => setChartPeriod("30hari")}
                   className={`text-xs px-3 rounded-md transition-all ${
                     chartPeriod === "30hari"
-                      ? "bg-white shadow-sm text-slate-800"
-                      : "text-slate-500 hover:text-slate-700"
+                      ? "bg-[#4B736A] shadow-sm text-white"
+                      : "text-slate-700 hover:text-slate-900 bg-white"
                   }`}
                 >
                   30 Hari
@@ -215,20 +215,20 @@ export default function AdminDashboard() {
                   >
                     <defs>
                       <linearGradient id="gradP" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#4B736A" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#4B736A" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="gradL" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} />
-                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#6B9B8A" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#6B9B8A" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                     <XAxis dataKey="tanggal" stroke="#94a3b8" fontSize={10} tickLine={false} />
                     <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} tickFormatter={(v: any) => "Rp" + Math.round(v / 1000) + "rb"} />
                     <Tooltip formatter={(value: any) => formatRupiah(value)} />
-                    <Area type="monotone" dataKey="penjualan" stroke="#3b82f6" strokeWidth={2} fill="url(#gradP)" />
-                    <Area type="monotone" dataKey="laba" stroke="#22c55e" strokeWidth={2} fill="url(#gradL)" />
+                    <Area type="monotone" dataKey="penjualan" stroke="#4B736A" strokeWidth={2} fill="url(#gradP)" />
+                    <Area type="monotone" dataKey="laba" stroke="#6B9B8A" strokeWidth={2} fill="url(#gradL)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>

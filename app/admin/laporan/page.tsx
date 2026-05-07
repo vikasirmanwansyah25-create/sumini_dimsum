@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { FileText, TrendingUp, DollarSign, Calendar, Loader2, Eye, ImageIcon, X, Download } from "lucide-react";
+import { FileText, TrendingUp, DollarSign, Calendar, Loader2, Eye, Trash2, ImageIcon, X, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -28,6 +29,8 @@ export default function LaporanPage() {
   const [transaksi, setTransaksi] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [selectedTransaksi, setSelectedTransaksi] = React.useState<any>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [selectedTrxId, setSelectedTrxId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     fetch("/api/transaksi")
@@ -66,6 +69,26 @@ export default function LaporanPage() {
       });
     });
     exportToExcel(data, `Laporan_Semua_Cabang_${new Date().toISOString().slice(0, 10)}`);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedTrxId) return;
+    try {
+      const res = await fetch(`/api/transaksi/${selectedTrxId}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (json.success) {
+        setTransaksi(transaksi.filter((t) => t.id !== selectedTrxId));
+        setIsDeleteDialogOpen(false);
+        setSelectedTrxId(null);
+      } else {
+        alert(json.message || "Gagal menghapus transaksi");
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Terjadi kesalahan saat menghapus");
+    }
   };
 
   const handleExportCabang = (cabangId: string, cabangNama: string) => {
@@ -118,10 +141,21 @@ export default function LaporanPage() {
 
 
       <Tabs defaultValue="semua">
-        <TabsList className="bg-[#4B736A] text-white">
-          <TabsTrigger value="semua" className="data-[state=active]:bg-white data-[state=active]:text-[#4B736A]">Semua Transaksi</TabsTrigger>
+        <TabsList className="bg-transparent border-b border-slate-200 rounded-none p-0 h-auto gap-0">
+          <TabsTrigger
+            value="semua"
+            className="data-[state=active]:text-[#4B736A] data-[state=active]:border-b-2 data-[state=active]:border-[#4B736A] data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent pb-2 px-4 text-slate-600"
+          >
+            Semua Transaksi
+          </TabsTrigger>
           {cabangIds.map((cid) => (
-            <TabsTrigger key={cid} value={cid} className="data-[state=active]:bg-white data-[state=active]:text-[#4B736A]">{cabangMap.get(cid)}</TabsTrigger>
+            <TabsTrigger
+              key={cid}
+              value={cid}
+              className="data-[state=active]:text-[#4B736A] data-[state=active]:border-b-2 data-[state=active]:border-[#4B736A] data-[state=active]:bg-transparent rounded-none border-b-2 border-transparent pb-2 px-4 text-slate-600"
+            >
+              {cabangMap.get(cid)}
+            </TabsTrigger>
           ))}
         </TabsList>
 
@@ -147,21 +181,22 @@ export default function LaporanPage() {
                  </div>
                ) : (
                  <Table>
-                   <TableHeader>
-                     <TableRow>
-                       <TableHead>ID</TableHead>
-                       <TableHead>Tanggal & Waktu</TableHead>
-                       <TableHead>Kasir</TableHead>
-                       <TableHead>Item</TableHead>
-                       <TableHead>Total Item</TableHead>
-                       <TableHead>Total</TableHead>
-                       <TableHead>Metode</TableHead>
-                       <TableHead>Status</TableHead>
-                       <TableHead className="text-right">Aksi</TableHead>
-                     </TableRow>
-                   </TableHeader>
-                   <TableBody>
-                     {transaksi.map((trx) => (
+                      <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Tanggal & Waktu</TableHead>
+                        <TableHead>Kasir</TableHead>
+                        <TableHead>Item</TableHead>
+                        <TableHead>Total Item</TableHead>
+                        <TableHead>Total</TableHead>
+                        <TableHead>Metode</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-center">Melihat</TableHead>
+                        <TableHead className="text-center">Hapus</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {transaksi.map((trx) => (
                        <TableRow key={trx.id}>
                          <TableCell className="font-medium">#{trx.id.slice(-6).toUpperCase()}</TableCell>
                          <TableCell>
@@ -196,26 +231,39 @@ export default function LaporanPage() {
                          <TableCell>
                            <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Selesai</Badge>
                          </TableCell>
-                         <TableCell className="text-right">
-                           <Button
-                             variant="ghost"
-                             size="sm"
-                             onClick={() => setSelectedTransaksi(trx)}
-                             className="h-8 w-8 p-0"
-                           >
-                             <Eye className="h-4 w-4 text-slate-500" />
-                           </Button>
-                         </TableCell>
-                       </TableRow>
-                     ))}
-                   </TableBody>
-                 </Table>
-               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setSelectedTransaksi(trx)}
+                              className="h-8 w-8 text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedTrxId(trx.id);
+                                setIsDeleteDialogOpen(true);
+                              }}
+                              className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+             </CardContent>
+           </Card>
+         </TabsContent>
 
-         {cabangIds.map((cid) => (
+          {cabangIds.map((cid) => (
            <TabsContent key={cid} value={cid}>
              <Card>
                <CardHeader>
@@ -229,65 +277,79 @@ export default function LaporanPage() {
                </CardHeader>
                <CardContent>
                  <Table>
-                   <TableHeader>
-                     <TableRow>
-                       <TableHead>ID</TableHead>
-                       <TableHead>Tanggal & Waktu</TableHead>
-                       <TableHead>Item</TableHead>
-                       <TableHead>Total Item</TableHead>
-                       <TableHead>Total</TableHead>
-                       <TableHead>Metode</TableHead>
-                       <TableHead className="text-right">Aksi</TableHead>
-                     </TableRow>
-                   </TableHeader>
-                   <TableBody>
-                     {transaksi.filter((trx) => trx.user?.cabang?.id === cid).map((trx) => (
-                       <TableRow key={trx.id}>
-                         <TableCell className="font-medium">#{trx.id.slice(-6).toUpperCase()}</TableCell>
-                         <TableCell>{formatDateTime(trx.tanggal)}</TableCell>
-                         <TableCell>
-                           <div className="flex flex-wrap gap-1">
-                             {trx.items.slice(0, 2).map((item, idx) => (
-                               <Badge key={idx} variant="secondary">{item.nama}</Badge>
-                             ))}
-                             {trx.items.length > 2 && <Badge variant="outline">+{trx.items.length - 2}</Badge>}
-                           </div>
-                         </TableCell>
-                         <TableCell>
-                           <div className="flex flex-wrap gap-1">
-                             {trx.items.slice(0, 2).map((item, idx) => (
-                               <Badge key={idx} variant="outline">{item.jumlah}x</Badge>
-                             ))}
-                             {trx.items.length > 2 && <Badge variant="outline">+{trx.items.length - 2}</Badge>}
-                           </div>
-                         </TableCell>
-                         <TableCell className="font-medium">{formatRupiah(trx.total)}</TableCell>
-                         <TableCell>
-                           <div className="flex items-center gap-1">
-                             <Badge variant="outline">{trx.metodePembayaran}</Badge>
-                             {trx.buktiPembayaran && (
-                               <ImageIcon className="h-3.5 w-3.5 text-amber-500" />
-                             )}
-                           </div>
-                         </TableCell>
-                         <TableCell className="text-right">
-                           <Button
-                             variant="ghost"
-                             size="sm"
-                             onClick={() => setSelectedTransaksi(trx)}
-                             className="h-8 w-8 p-0"
-                           >
-                             <Eye className="h-4 w-4 text-slate-500" />
-                           </Button>
-                         </TableCell>
-                       </TableRow>
-                     ))}
-                   </TableBody>
-                 </Table>
-               </CardContent>
-             </Card>
-           </TabsContent>
-         ))}
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Tanggal & Waktu</TableHead>
+                        <TableHead>Item</TableHead>
+                        <TableHead>Total Item</TableHead>
+                        <TableHead>Total</TableHead>
+                        <TableHead>Metode</TableHead>
+                        <TableHead className="text-center">Melihat</TableHead>
+                        <TableHead className="text-center">Hapus</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {transaksi.filter((trx) => trx.user?.cabang?.id === cid).map((trx) => (
+                        <TableRow key={trx.id}>
+                          <TableCell className="font-medium">#{trx.id.slice(-6).toUpperCase()}</TableCell>
+                          <TableCell>{formatDateTime(trx.tanggal)}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {trx.items.slice(0, 2).map((item, idx) => (
+                                <Badge key={idx} variant="secondary">{item.nama}</Badge>
+                              ))}
+                              {trx.items.length > 2 && <Badge variant="outline">+{trx.items.length - 2}</Badge>}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {trx.items.slice(0, 2).map((item, idx) => (
+                                <Badge key={idx} variant="outline">{item.jumlah}x</Badge>
+                              ))}
+                              {trx.items.length > 2 && <Badge variant="outline">+{trx.items.length - 2}</Badge>}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">{formatRupiah(trx.total)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Badge variant="outline">{trx.metodePembayaran}</Badge>
+                              {trx.buktiPembayaran && (
+                                <ImageIcon className="h-3.5 w-3.5 text-amber-500" />
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setSelectedTransaksi(trx)}
+                              className="h-8 w-8 text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedTrxId(trx.id);
+                                setIsDeleteDialogOpen(true);
+                              }}
+                              className="h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          ))}
       </Tabs>
 
       {/* Detail Dialog */}
@@ -369,8 +431,37 @@ export default function LaporanPage() {
             </div>
           )}
         </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+       </Dialog>
+
+       {/* Dialog Hapus Transaksi */}
+       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+         <DialogContent className="max-w-sm sm:max-w-md border-slate-200">
+           <DialogHeader>
+             <DialogTitle className="text-lg font-semibold text-slate-900">
+               Konfirmasi Hapus
+             </DialogTitle>
+           </DialogHeader>
+           <div className="py-3 lg:py-4">
+             <p className="text-slate-600 text-sm">
+               Apakah Anda yakin ingin menghapus transaksi ini?
+               Tindakan ini tidak dapat dibatalkan.
+             </p>
+           </div>
+           <DialogFooter className="flex flex-col sm:flex-row gap-2">
+             <Button
+               variant="outline"
+               onClick={() => setIsDeleteDialogOpen(false)}
+               className="border-slate-200"
+             >
+               Batal
+             </Button>
+             <Button variant="destructive" onClick={handleDelete}>
+               Hapus
+             </Button>
+           </DialogFooter>
+         </DialogContent>
+       </Dialog>
+     </div>
+   );
+ }
 

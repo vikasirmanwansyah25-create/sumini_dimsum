@@ -14,7 +14,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { TrendingUp, DollarSign, ShoppingBag, Package, ArrowUpRight, Loader2 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Cabang } from "@/lib/types";
 
 export default function CashierDashboardPage() {
@@ -22,6 +22,7 @@ export default function CashierDashboardPage() {
   const [stokMenipis, setStokMenipis] = React.useState<any[]>([]);
   const [loadingStats, setLoadingStats] = React.useState(true);
   const [cabangData, setCabangData] = React.useState<Cabang | null>(null);
+  const [activeTab, setActiveTab] = React.useState<"7hari" | "30hari">("7hari");
 
   const { currentUser } = useAuthStore();
 
@@ -168,41 +169,49 @@ export default function CashierDashboardPage() {
                 <CardTitle className="text-sm lg:text-base font-semibold text-slate-800">Tren Penjualan</CardTitle>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="7hari">
-                  <TabsList className="mb-3 lg:mb-4 bg-slate-100 h-7 lg:h-8">
-                    <TabsTrigger value="7hari" className="text-xs data-[state=active]:bg-white">7 Hari</TabsTrigger>
-                    <TabsTrigger value="30hari" className="text-xs data-[state=active]:bg-white">30 Hari</TabsTrigger>
-                  </TabsList>
-                  {["7hari", "30hari"].map((tab) => (
-                    <TabsContent key={tab} value={tab}>
-                      <div className="h-52 lg:h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart
-                            data={stats ? (tab === "7hari" ? stats.grafik7Hari : stats.grafik30Hari) : []}
-                            margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
-                          >
-                            <defs>
-                              <linearGradient id={`gradP-${tab}`} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
-                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                              </linearGradient>
-                              <linearGradient id={`gradL-${tab}`} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} />
-                                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                            <XAxis dataKey="tanggal" stroke="#94a3b8" fontSize={10} tickLine={false} />
-                            <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} tickFormatter={(v: any) => "Rp" + Math.round(v / 1000) + "rb"} />
-                            <Tooltip formatter={(value: any) => formatRupiah(value)} />
-                            <Area type="monotone" dataKey="penjualan" stroke="#3b82f6" strokeWidth={2} fill={`url(#gradP-${tab})`} />
-                            <Area type="monotone" dataKey="laba" stroke="#22c55e" strokeWidth={2} fill={`url(#gradL-${tab})`} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </TabsContent>
-                  ))}
-                </Tabs>
+                <div className="flex gap-2 mb-3 lg:mb-4">
+                  <Button
+                    size="sm"
+                    variant={activeTab === "7hari" ? "default" : "outline"}
+                    className={`text-xs h-7 lg:h-8 ${activeTab === "7hari" ? "bg-[#4B736A] text-white" : "bg-white"}`}
+                    onClick={() => setActiveTab("7hari")}
+                  >
+                    7 Hari
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={activeTab === "30hari" ? "default" : "outline"}
+                    className={`text-xs h-7 lg:h-8 ${activeTab === "30hari" ? "bg-[#4B736A] text-white" : "bg-white"}`}
+                    onClick={() => setActiveTab("30hari")}
+                  >
+                    30 Hari
+                  </Button>
+                </div>
+                <div className="h-52 lg:h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={stats ? (activeTab === "7hari" ? stats.grafik7Hari : stats.grafik30Hari) : []}
+                      margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
+                    >
+                       <defs>
+                           <linearGradient id="gradP" x1="0" y1="0" x2="0" y2="1">
+                             <stop offset="5%" stopColor="#4B736A" stopOpacity={0.3} />
+                             <stop offset="95%" stopColor="#4B736A" stopOpacity={0} />
+                           </linearGradient>
+                           <linearGradient id="gradL" x1="0" y1="0" x2="0" y2="1">
+                             <stop offset="5%" stopColor="#6B9B8A" stopOpacity={0.2} />
+                             <stop offset="95%" stopColor="#6B9B8A" stopOpacity={0} />
+                           </linearGradient>
+                         </defs>
+                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                       <XAxis dataKey="tanggal" stroke="#94a3b8" fontSize={10} tickLine={false} />
+                       <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} tickFormatter={(v: any) => "Rp" + Math.round(v / 1000) + "rb"} />
+                       <Tooltip formatter={(value: any) => formatRupiah(value)} />
+                        <Area type="monotone" dataKey="penjualan" stroke="#4B736A" strokeWidth={2} fill="url(#gradP)" />
+                        <Area type="monotone" dataKey="laba" stroke="#6B9B8A" strokeWidth={2} fill="url(#gradL)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
 
