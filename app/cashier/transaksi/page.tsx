@@ -48,8 +48,11 @@ export default function CashierTransaksiPage() {
     setLoading(true);
     try {
       const transaksiId = `TRX-${Date.now()}`;
-      // Gunakan waktu lokal WIB
+      // Gunakan waktu lokal WIB dengan format ISO yang mengandung offset +07:00
       const now = new Date();
+      const wibTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+      // Format: 2026-05-07T08:51:00.000+07:00
+      const wibISO = wibTime.toISOString().replace('Z', '+07:00');
       const payload = {
         userId: currentUser.id,
         items: items.map((item) => ({
@@ -67,7 +70,7 @@ export default function CashierTransaksiPage() {
         catatan,
         keterangan,
         buktiPembayaran,
-        tanggal: now.toISOString(),
+        tanggal: wibISO,
       };
 
       const res = await fetch("/api/transaksi", {

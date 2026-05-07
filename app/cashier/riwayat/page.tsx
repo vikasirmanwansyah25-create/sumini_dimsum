@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuthStore } from "@/store/auth";
-import { formatRupiah, formatTime, formatDate } from "@/lib/utils";
+import { formatRupiah, formatTime, formatDate, formatDateTime } from "@/lib/utils";
 
 interface CartItemData {
   id: string;
@@ -123,23 +123,34 @@ export default function RiwayatPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>ID</TableHead>
-                      <TableHead>Waktu</TableHead>
+                      <TableHead>Tanggal & Waktu</TableHead>
                       <TableHead>Item</TableHead>
+                      <TableHead>Total Item</TableHead>
                       <TableHead>Total</TableHead>
                       <TableHead>Metode</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Aksi</TableHead>
+                      <TableHead className="text-right">Lihat</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {transaksi.map((trx) => (
                       <TableRow key={trx.id}>
                         <TableCell className="font-medium">#{trx.id.slice(-6).toUpperCase()}</TableCell>
-                        <TableCell>{formatDate(trx.tanggal)} {formatTime(trx.tanggal)}</TableCell>
+                        <TableCell>{formatDateTime(trx.tanggal)}</TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {trx.items.slice(0, 3).map((item, idx) => (
-                              <Badge key={idx} variant="secondary">{item.jumlah}x {item.rasa}</Badge>
+                              <Badge key={idx} variant="secondary">{item.nama}</Badge>
+                            ))}
+                            {trx.items.length > 3 && (
+                              <Badge variant="outline">+{trx.items.length - 3}</Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {trx.items.slice(0, 3).map((item, idx) => (
+                              <Badge key={idx} variant="secondary">{item.jumlah}x</Badge>
                             ))}
                             {trx.items.length > 3 && (
                               <Badge variant="outline">+{trx.items.length - 3}</Badge>
@@ -192,7 +203,7 @@ export default function RiwayatPage() {
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <p className="text-slate-500">Tanggal</p>
-                  <p className="font-medium">{formatDate(selectedTransaksi.tanggal)} {formatTime(selectedTransaksi.tanggal)}</p>
+                  <p className="font-medium">{formatDateTime(selectedTransaksi.tanggal)}</p>
                 </div>
                 <div>
                   <p className="text-slate-500">Metode</p>

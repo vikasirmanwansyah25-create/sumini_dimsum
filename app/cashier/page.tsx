@@ -135,7 +135,7 @@ export default function CashierDashboardPage() {
       ) : (
         <>
           {/* Stat Cards */}
-          <div className="grid gap-3 lg:gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 lg:gap-4 grid-cols-2 lg:grid-cols-4">
             {statCards.map((stat, index) => {
               const Icon = stat.icon;
               return (

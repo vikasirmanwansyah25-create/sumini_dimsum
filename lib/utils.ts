@@ -15,35 +15,34 @@ export function formatRupiah(amount: number): string {
 }
 
 export function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "Asia/Jakarta",
-  });
+  const date = new Date(dateString);
+  // Karena tanggal sudah disimpan dalam WIB (+07:00), langsung format saja
+  const day = date.getDate().toString().padStart(2, '0');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day} ${month} ${year}`;
 }
 
 export function formatTime(dateString: string): string {
-  const date = new Date(dateString); // Waktu UTC dari database
-  // Konversi ke WIB (UTC+7)
-  const wibHours = (date.getUTCHours() + 7) % 24;
-  const wibMinutes = date.getUTCMinutes();
-  return `${wibHours.toString().padStart(2, '0')}.${wibMinutes.toString().padStart(2, '0')}`;
+  const date = new Date(dateString);
+  // Karena tanggal sudah disimpan dalam WIB (+07:00), langsung format saja
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  return `${hours}.${minutes}`;
 }
 
 export function formatDateTime(dateString: string): string {
   const date = new Date(dateString);
-  const day = date.getUTCDate().toString().padStart(2, '0');
+  // Karena tanggal sudah disimpan dalam WIB (+07:00), langsung format saja
+  // Jika ada +07:00 di string, JavaScript akan parse dengan benar
+  const day = date.getDate().toString().padStart(2, '0');
   const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-  const month = months[date.getUTCMonth()];
-  const year = date.getUTCFullYear();
-  const time = date.toLocaleTimeString('id-ID', { 
-    timeZone: 'Asia/Jakarta', 
-    hour12: false, 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  }).replace(':', '.');
-  return `${day} ${month} ${year}, ${time}`;
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  return `${day} ${month} ${year}, ${hours}.${minutes}`;
 }
 
 export function getTodayDate(): string {

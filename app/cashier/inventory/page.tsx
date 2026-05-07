@@ -404,7 +404,7 @@ export default function CashierInventoryPage() {
                   <TableHead>Jenis</TableHead>
                   <TableHead>Berat</TableHead>
                   <TableHead>Stok</TableHead>
-                  <TableHead>Aksi</TableHead>
+                  <TableHead>Edit</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

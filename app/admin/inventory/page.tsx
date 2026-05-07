@@ -347,13 +347,13 @@ export default function InventoryPage() {
                    <TableHead className="text-xs font-semibold text-slate-600">Cabang</TableHead>
                    <TableHead className="text-xs font-semibold text-slate-600">Stok</TableHead>
                    <TableHead className="text-xs font-semibold text-slate-600">Berat</TableHead>
-                   <TableHead className="text-xs font-semibold text-slate-600">Aksi</TableHead>
+                   <TableHead className="text-xs font-semibold text-slate-600">Edit</TableHead>
                  </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-12">
+                    <TableCell colSpan={8} className="text-center py-12">
                       <div className="flex flex-col items-center gap-2">
                         <Loader2 className="h-6 w-6 animate-spin text-[#4A776E]" />
                         <p className="text-sm text-slate-500">Memuat data...</p>
@@ -362,7 +362,7 @@ export default function InventoryPage() {
                   </TableRow>
                 ) : filteredBahan.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-12">
+                    <TableCell colSpan={8} className="text-center py-12">
                       <div className="flex flex-col items-center gap-2">
                         <Package className="h-8 w-8 text-slate-300" />
                         <p className="text-sm text-slate-500">Tidak ada bahan</p>
