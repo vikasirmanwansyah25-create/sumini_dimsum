@@ -290,7 +290,7 @@ export default function CashierInventoryPage() {
   return (
     <div className="space-y-4 lg:space-y-6 max-w-7xl mx-auto">
        {/* Header */}
-       <div className="space-y-3">
+       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
          <div>
            <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">Inventory Cabang</h1>
            <p className="text-sm lg:text-base text-slate-500 flex items-center gap-1">
@@ -511,7 +511,7 @@ export default function CashierInventoryPage() {
               <label className="text-sm font-medium">Nama Bahan</label>
               <Input
                 value={formData.nama}
-                onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, nama: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
                 placeholder="Nama produk"
               />
             </div>
@@ -533,11 +533,11 @@ export default function CashierInventoryPage() {
             {!["Pengemasan", "Operasional"].includes(formData.jenisProduk) && (
                <div>
                  <label className="text-sm font-medium">Rasa</label>
-                 <Input
-                   value={formData.rasa}
-                   onChange={(e) => setFormData({ ...formData, rasa: e.target.value })}
-                   placeholder="Rasa produk"
-                 />
+                  <Input
+                    value={formData.rasa}
+                    onChange={(e) => setFormData({ ...formData, rasa: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
+                    placeholder="Rasa produk"
+                  />
                </div>
              )}
             <div className="grid grid-cols-2 gap-4">
@@ -554,8 +554,9 @@ export default function CashierInventoryPage() {
                 <div className="flex gap-2">
                   <Input
                     type="number"
+                    min={0}
                     value={formData.stok}
-                    onChange={(e) => setFormData({ ...formData, stok: Number(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, stok: Math.max(0, Number(e.target.value)) })}
                   />
                   <Select
                     value={formData.satuan}

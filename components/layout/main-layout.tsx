@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Sidebar } from "./sidebar";
 import { useAuthStore } from "@/store/auth";
-import { CalendarDays, ChevronDown, Menu } from "lucide-react";
+import { CalendarDays, Menu } from "lucide-react";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -78,7 +78,6 @@ export function MainLayout({ children }: MainLayoutProps) {
                   {currentUser?.role}
                 </p>
               </div>
-              <ChevronDown className="h-3.5 w-3.5 text-slate-400 hidden md:block" />
             </div>
           </div>
         </header>

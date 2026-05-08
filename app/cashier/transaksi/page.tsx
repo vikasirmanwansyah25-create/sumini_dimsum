@@ -47,13 +47,14 @@ export default function CashierTransaksiPage() {
 
     setLoading(true);
     try {
-      const transaksiId = `TRX-${Date.now()}`;
+      const transaksiId = `TRX-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       // Gunakan waktu lokal WIB dengan format ISO yang mengandung offset +07:00
       const now = new Date();
       const wibTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
       // Format: 2026-05-07T08:51:00.000+07:00
       const wibISO = wibTime.toISOString().replace('Z', '+07:00');
       const payload = {
+        id: transaksiId,
         userId: currentUser.id,
         items: items.map((item) => ({
           menuId: item.id,
@@ -145,6 +146,7 @@ export default function CashierTransaksiPage() {
         items={items}
         subtotal={subtotal}
         total={total}
+        loading={loading}
         onCheckout={handleCheckout}
       />
 

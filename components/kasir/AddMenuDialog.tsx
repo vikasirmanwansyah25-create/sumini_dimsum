@@ -177,8 +177,12 @@ export function AddMenuDialog({ open, onOpenChange, onSuccess, menu }: AddMenuDi
               <Input
                 id="hargaJual"
                 type="number"
+                min={0}
                 value={hargaJual}
-                onChange={(e) => setHargaJual(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "" || Number(val) >= 0) setHargaJual(val);
+                }}
                 placeholder="0"
               />
             </div>
@@ -187,8 +191,12 @@ export function AddMenuDialog({ open, onOpenChange, onSuccess, menu }: AddMenuDi
               <Input
                 id="hargaBeli"
                 type="number"
+                min={0}
                 value={hargaBeli}
-                onChange={(e) => setHargaBeli(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "" || Number(val) >= 0) setHargaBeli(val);
+                }}
                 placeholder="0"
               />
             </div>

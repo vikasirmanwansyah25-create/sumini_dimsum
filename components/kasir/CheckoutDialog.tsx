@@ -31,6 +31,7 @@ interface CheckoutDialogProps {
   items: CartItem[];
   subtotal: number;
   total: number;
+  loading?: boolean;
   onCheckout: (
     metode: MetodePembayaran,
     bayar: number,
@@ -67,6 +68,7 @@ export function CheckoutDialog({
   items,
   subtotal,
   total,
+  loading = false,
   onCheckout,
 }: CheckoutDialogProps) {
   const [metode, setMetode] = React.useState<MetodePembayaran>("TUNAI");
@@ -75,6 +77,7 @@ export function CheckoutDialog({
   const [keterangan, setKeterangan] = React.useState("");
   const [buktiPembayaran, setBuktiPembayaran] = React.useState<string | null>(null);
   const [step, setStep] = React.useState<"ringkasan" | "pembayaran">("ringkasan");
+  const isSubmitting = React.useRef(false);
 
   const kembalian = parseInt(bayarAmount || "0") - total;
 
@@ -86,8 +89,15 @@ export function CheckoutDialog({
       setKeterangan("");
       setBuktiPembayaran(null);
       setStep("ringkasan");
+      isSubmitting.current = false;
     }
   }, [open]);
+
+  React.useEffect(() => {
+    if (!loading) {
+      isSubmitting.current = false;
+    }
+  }, [loading]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -115,6 +125,7 @@ export function CheckoutDialog({
   };
 
   const handleBayar = () => {
+    if (isSubmitting.current) return;
     if (metode === "TUNAI") {
       const bayar = parseInt(bayarAmount || "0");
       if (bayar < 500) {
@@ -125,6 +136,7 @@ export function CheckoutDialog({
         alert("Jumlah bayar kurang dari total!");
         return;
       }
+      isSubmitting.current = true;
       onCheckout(metode, bayar, Math.max(0, bayar - total), catatan, keterangan || undefined, buktiPembayaran || undefined);
     } else if (metode === "QUIRZ") {
       if (!buktiPembayaran) {
@@ -135,6 +147,7 @@ export function CheckoutDialog({
         alert("Keterangan wajib diisi untuk pembayaran QRIS!");
         return;
       }
+      isSubmitting.current = true;
       onCheckout(metode, total, 0, catatan, keterangan, buktiPembayaran);
     }
   };
@@ -430,10 +443,10 @@ export function CheckoutDialog({
             </Button>
             <Button
               onClick={handleBayar}
-              disabled={!isBayarValid()}
+              disabled={!isBayarValid() || loading}
               className="min-w-[120px] bg-[#4A776E] hover:bg-[#4A776E]/90 text-white"
             >
-              Bayar
+              {loading ? "Memproses..." : "Bayar"}
             </Button>
           </DialogFooter>
         )}

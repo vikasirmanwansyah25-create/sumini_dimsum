@@ -9,7 +9,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { nama, rasa, berat, stok, gambar, deskripsi, jenisProduk, satuan } = body;
+    const { nama, rasa, berat, stok, gambar, deskripsi, jenisProduk, satuan, cabangId } = body;
 
     const { data: existing, error: checkError } = await supabase
       .from('BahanBaku')
@@ -33,6 +33,7 @@ export async function PUT(
     if (deskripsi !== undefined) updateData.deskripsi = deskripsi;
     if (jenisProduk !== undefined) updateData.jenisProduk = jenisProduk;
     if (satuan !== undefined) updateData.satuan = satuan;
+    if (cabangId !== undefined) updateData.cabangId = cabangId;
     
     console.log("Update data for BahanBaku ID:", id, "Data:", updateData);
 

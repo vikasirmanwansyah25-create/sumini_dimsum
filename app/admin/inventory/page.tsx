@@ -181,8 +181,8 @@ export default function InventoryPage() {
       return;
     }
 
-    // Validasi cabang wajib dipilih (hanya untuk tambah baru)
-    if (!selectedBahan && !formData.cabangId) {
+    // Validasi cabang wajib dipilih
+    if (!formData.cabangId) {
       alert("Cabang wajib dipilih");
       return;
     }
@@ -226,12 +226,10 @@ export default function InventoryPage() {
      setSaving(true);
     try {
       if (selectedBahan) {
-        // Jangan kirim cabangId saat update karena tidak boleh diubah
-        const { cabangId, ...updateData } = formData;
         const res = await fetch(`/api/bahan-baku/${selectedBahan.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updateData),
+          body: JSON.stringify(formData),
         });
         const json = await res.json();
         if (json.success) {
@@ -285,7 +283,7 @@ export default function InventoryPage() {
   return (
     <div className="space-y-4 lg:space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="space-y-3">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">Inventory</h1>
           <p className="text-sm lg:text-base text-slate-500 flex items-center gap-1">
@@ -489,7 +487,7 @@ export default function InventoryPage() {
                 <label className="text-sm font-medium text-slate-700">Nama Bahan <span className="text-red-500">*</span></label>
                 <Input
                   value={formData.nama}
-                  onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, nama: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
                   placeholder="Contoh: Kulit Dimsum Premium"
                   className="h-10 border-slate-200"
                 />
@@ -521,7 +519,7 @@ export default function InventoryPage() {
                 </label>
                 <Input
                    value={formData.rasa}
-                   onChange={(e) => setFormData({ ...formData, rasa: e.target.value })}
+                   onChange={(e) => setFormData({ ...formData, rasa: e.target.value.replace(/[^a-zA-Z\s]/g, '') })}
                    placeholder="Contoh: Original"
                    className="h-10 border-slate-200"
                    disabled={["Pengemasan", "Operasional"].includes(formData.jenisProduk)}
@@ -599,9 +597,10 @@ export default function InventoryPage() {
                 <div className="flex gap-2">
                   <Input
                      type="number"
+                     min={0}
                      value={formData.stok}
                      onChange={(e) =>
-                       setFormData({ ...formData, stok: parseFloat(e.target.value) || 0 })
+                       setFormData({ ...formData, stok: Math.max(0, parseFloat(e.target.value) || 0) })
                      }
                      className="h-10 border-slate-200"
                    />

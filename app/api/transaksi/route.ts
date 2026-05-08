@@ -68,8 +68,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const transaksiId = body.id || `TRX-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    const { data: existing } = await supabase
+      .from('Transaksi')
+      .select('id')
+      .eq('id', transaksiId)
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json(
+        { success: false, message: "Transaksi dengan ID ini sudah ada, hindari duplikasi." },
+        { status: 409 }
+      );
+    }
+
     const transaksiData: any = {
-      id: `TRX-${Date.now()}`,
+      id: transaksiId,
       userId: userId,
       tanggal: tanggal || new Date().toISOString(),
       subtotal: Number(subtotal),

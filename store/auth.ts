@@ -133,7 +133,7 @@ export const useAuthStore = create<AuthState>()(
         *,
         cabang:Cabang!User_cabangId_fkey(*)
       `)
-      .ilike('username', username)
+      .eq('username', username)
       .eq('password', password)
       .maybeSingle();
 
@@ -186,7 +186,8 @@ export const useAuthStore = create<AuthState>()(
       throw new Error(error.error || "Gagal mengupdate user");
     }
     
-    const updatedUser = await res.json();
+    const json = await res.json();
+    const updatedUser = json.success ? json.data : json;
     set((state) => ({
       users: state.users.map((user) => (user.id === id ? updatedUser : user)),
     }));

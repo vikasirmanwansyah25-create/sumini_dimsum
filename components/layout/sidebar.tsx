@@ -48,8 +48,11 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   const isAdmin = currentUser?.role === "ADMIN";
 
   const handleLogout = () => {
-    logout();
-    window.location.href = "/login";
+    const confirmed = window.confirm("Apakah Anda yakin ingin keluar?");
+    if (confirmed) {
+      logout();
+      window.location.href = "/login";
+    }
   };
 
   return (

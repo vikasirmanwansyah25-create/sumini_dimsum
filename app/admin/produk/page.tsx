@@ -492,8 +492,9 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                 <label className="text-sm font-medium text-slate-700">Harga Jual <span className="text-red-500">*</span></label>
                 <Input
                   type="number"
+                  min={0}
                   value={formData.harga}
-                  onChange={(e) => setFormData({ ...formData, harga: parseInt(e.target.value) || 0 })}
+                  onChange={(e) => setFormData({ ...formData, harga: Math.max(0, parseInt(e.target.value) || 0) })}
                   className="h-10 border-slate-200"
                 />
               </div>
@@ -501,8 +502,9 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                 <label className="text-sm font-medium text-slate-700">Harga Beli <span className="text-red-500">*</span></label>
                 <Input
                   type="number"
+                  min={0}
                   value={formData.hargaBeli}
-                  onChange={(e) => setFormData({ ...formData, hargaBeli: parseInt(e.target.value) || 0 })}
+                  onChange={(e) => setFormData({ ...formData, hargaBeli: Math.max(0, parseInt(e.target.value) || 0) })}
                   className="h-10 border-slate-200"
                 />
               </div>
