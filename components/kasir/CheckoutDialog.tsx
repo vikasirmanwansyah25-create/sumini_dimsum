@@ -128,10 +128,6 @@ export function CheckoutDialog({
     if (isSubmitting.current) return;
     if (metode === "TUNAI") {
       const bayar = parseInt(bayarAmount || "0");
-      if (bayar < 500) {
-        alert("Jumlah uang minimal Rp 500!");
-        return;
-      }
       if (bayar < total) {
         alert("Jumlah bayar kurang dari total!");
         return;
@@ -155,7 +151,7 @@ export function CheckoutDialog({
   const isBayarValid = () => {
     if (metode === "TUNAI") {
       const bayar = parseInt(bayarAmount || "0");
-      return bayar >= 500 && bayar >= total;
+      return bayar > 0 && bayar >= total;
     }
     if (metode === "QUIRZ") return !!buktiPembayaran && keterangan.trim() !== "";
     return false;
@@ -300,20 +296,23 @@ export function CheckoutDialog({
                       Jumlah Uang Diterima <span className="text-rose-500">*</span>
                     </label>
                     <Input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={bayarAmount}
                       onChange={(e) => {
-                        const val = parseInt(e.target.value);
-                        if (val < 500 && val > 0) return;
-                        setBayarAmount(e.target.value);
+                        const value = e.target.value;
+                        if (value === "") {
+                          setBayarAmount("");
+                          return;
+                        }
+                        const cleaned = value.replace(/\D/g, "");
+                        if (cleaned !== "") {
+                          setBayarAmount(cleaned.replace(/^0+(?!$)/, ""));
+                        }
                       }}
-                      placeholder="Minimal Rp 500"
-                      min="500"
+                      placeholder="0"
                       className="h-11 text-base border-slate-200 focus-visible:ring-[#4A776E]"
                     />
-                    {bayarAmount && parseInt(bayarAmount) < 500 && (
-                      <p className="text-xs text-rose-500 mt-1">Jumlah uang minimal Rp 500</p>
-                    )}
                   </div>
                   {bayarAmount && parseInt(bayarAmount) >= 500 && kembalian >= 0 && (
                     <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">

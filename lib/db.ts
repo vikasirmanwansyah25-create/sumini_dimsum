@@ -108,7 +108,7 @@ export const bahanBakuService = {
 export const menuService = {
   async getAll(cabangId?: string) {
     let query = supabase.from('Menu').select('*, Cabang!Menu_cabangId_fkey(*), Resep(*, BahanBaku!Resep_bahanBakuId_fkey(*))').order('nama')
-    if (cabangId) query = query.eq('cabangId', cabangId)
+    if (cabangId) query = query.or(`cabangId.eq.${cabangId},cabangId.is.null`)
     const { data, error } = await query
     if (error) throw error
     return data
@@ -120,14 +120,32 @@ export const menuService = {
     return data
   },
 
-  async create(menu: { nama: string; kategori: string; harga: number; hargaBeli?: number; tersedia?: boolean; gambar?: string; deskripsi?: string; cabangId?: string }) {
-    const { data, error } = await supabase.from('Menu').insert(menu).select().single()
+  async create(menu: { nama: string; kategori: string; harga: number; hargaBeli?: number; tersedia?: boolean; gambar?: string; deskripsi?: string; cabangId?: string | null }) {
+    const { data, error } = await supabase.from('Menu').insert({
+      nama: menu.nama,
+      kategori: menu.kategori,
+      harga: menu.harga,
+      harga_beli: menu.hargaBeli,
+      tersedia: menu.tersedia,
+      gambar: menu.gambar,
+      deskripsi: menu.deskripsi,
+      cabangId: menu.cabangId || null,
+    }).select().single()
     if (error) throw error
     return data
   },
 
-  async update(id: string, menu: Partial<{ nama: string; kategori: string; harga: number; hargaBeli?: number; tersedia?: boolean; gambar?: string; deskripsi?: string; cabangId?: string }>) {
-    const { data, error } = await supabase.from('Menu').update(menu).eq('id', id).select().single()
+  async update(id: string, menu: Partial<{ nama: string; kategori: string; harga: number; hargaBeli?: number; tersedia?: boolean; gambar?: string; deskripsi?: string; cabangId?: string | null }>) {
+    const updateData: any = {}
+    if (menu.nama !== undefined) updateData.nama = menu.nama
+    if (menu.kategori !== undefined) updateData.kategori = menu.kategori
+    if (menu.harga !== undefined) updateData.harga = menu.harga
+    if (menu.hargaBeli !== undefined) updateData.harga_beli = menu.hargaBeli
+    if (menu.tersedia !== undefined) updateData.tersedia = menu.tersedia
+    if (menu.gambar !== undefined) updateData.gambar = menu.gambar
+    if (menu.deskripsi !== undefined) updateData.deskripsi = menu.deskripsi
+    if (menu.cabangId !== undefined) updateData.cabangId = menu.cabangId
+    const { data, error } = await supabase.from('Menu').update(updateData).eq('id', id).select().single()
     if (error) throw error
     return data
   },

@@ -59,7 +59,7 @@ export async function PUT(
     if (tersedia !== undefined) updateData.tersedia = tersedia;
     if (gambarPath !== undefined) updateData.gambar = gambarPath;
     if (deskripsi !== undefined) updateData.deskripsi = deskripsi;
-    if (cabangId !== undefined) updateData.cabangId = cabangId;
+    if (cabangId !== undefined) updateData.cabangId = cabangId || null;
 
     const { data: menu, error } = await supabase
       .from('Menu')
@@ -71,8 +71,17 @@ export async function PUT(
     if (error) throw error;
 
     const transformedMenu = {
-      ...menu,
+      id: menu.id,
+      nama: menu.nama,
+      kategori: menu.kategori,
+      harga: menu.harga,
       hargaBeli: menu.harga_beli,
+      tersedia: menu.tersedia,
+      gambar: menu.gambar,
+      deskripsi: menu.deskripsi,
+      createdAt: menu.createdAt,
+      cabangId: menu.cabangId,
+      cabang: menu.cabang,
     };
 
     return NextResponse.json({ success: true, data: transformedMenu });

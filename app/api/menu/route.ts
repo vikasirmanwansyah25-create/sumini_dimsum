@@ -25,9 +25,9 @@ export async function GET(req: NextRequest) {
     const cabangId = searchParams.get("cabangId");
     const all = searchParams.get("all");
 
-let query = supabase
-       .from('Menu')
-       .select('*, cabang:Cabang!Menu_cabangId_fkey(*)');
+    let query = supabase
+      .from('Menu')
+      .select('*, cabang:Cabang!Menu_cabangId_fkey(*)');
 
     if (all !== "true") {
       query = query.eq('tersedia', true);
@@ -41,8 +41,17 @@ let query = supabase
     if (error) throw error;
 
     const transformedMenu = menu?.map((item: any) => ({
-      ...item,
+      id: item.id,
+      nama: item.nama,
+      kategori: item.kategori,
+      harga: item.harga,
       hargaBeli: item.harga_beli,
+      tersedia: item.tersedia,
+      gambar: item.gambar,
+      deskripsi: item.deskripsi,
+      createdAt: item.createdAt,
+      cabangId: item.cabangId,
+      cabang: item.cabang,
     })) || [];
 
     return NextResponse.json({ success: true, data: transformedMenu });
@@ -76,27 +85,36 @@ export async function POST(req: NextRequest) {
       gambarPath = gambar;
     }
 
-const { data: menu, error } = await supabase
-       .from('Menu')
-       .insert({
-         id: crypto.randomUUID(),
-         nama,
-         kategori,
-         harga: Number(harga) || 0,
-         harga_beli: hargaBeli ? Number(hargaBeli) : null,
-         tersedia: tersedia !== false,
-         gambar: gambarPath,
-         deskripsi: deskripsi || null,
-         cabangId: cabangId || null,
-       })
-       .select('*, cabang:Cabang!Menu_cabangId_fkey(*)')
-       .single();
+    const { data: menu, error } = await supabase
+      .from('Menu')
+      .insert({
+        id: crypto.randomUUID(),
+        nama,
+        kategori,
+        harga: Number(harga) || 0,
+        harga_beli: hargaBeli ? Number(hargaBeli) : null,
+        tersedia: tersedia !== false,
+        gambar: gambarPath,
+        deskripsi: deskripsi || null,
+        cabangId: cabangId || null,
+      })
+      .select('*, cabang:Cabang!Menu_cabangId_fkey(*)')
+      .single();
 
     if (error) throw error;
 
     const transformedMenu = {
-      ...menu,
+      id: menu.id,
+      nama: menu.nama,
+      kategori: menu.kategori,
+      harga: menu.harga,
       hargaBeli: menu.harga_beli,
+      tersedia: menu.tersedia,
+      gambar: menu.gambar,
+      deskripsi: menu.deskripsi,
+      createdAt: menu.createdAt,
+      cabangId: menu.cabangId,
+      cabang: menu.cabang,
     };
 
     return NextResponse.json({ success: true, data: transformedMenu }, { status: 201 });

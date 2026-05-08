@@ -91,8 +91,8 @@ export default function CashierTransaksiPage() {
       // Gunakan waktu sekarang (WIB) dari browser
       
       const transaksiData = {
-        id: json.data.id,
         ...payload,
+        id: json.data.id,
         items: items.map((item) => ({
           ...item,
           id: item.id,

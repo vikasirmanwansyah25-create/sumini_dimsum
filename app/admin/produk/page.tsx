@@ -52,12 +52,14 @@ interface Produk {
   createdAt: string;
 }
 
+const SEMUA_CABANG_VALUE = "__all__";
+
 export default function ProdukPage() {
   const [produk, setProduk] = React.useState<Produk[]>([]);
   const [cabang, setCabang] = React.useState<Cabang[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState("");
-const [filterCabang, setFilterCabang] = React.useState<string>("all");
+  const [filterCabang, setFilterCabang] = React.useState<string>("all");
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [selectedProduk, setSelectedProduk] = React.useState<Produk | null>(null);
@@ -73,7 +75,7 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
     deskripsi: "",
     cabangId: null as string | null,
   });
-  const [imagePreview, setImagePreview] = React.useState<string>("");
+  const [imagePreview, setImagePreview] = React.useState("");
   const [uploading, setUploading] = React.useState(false);
   const [showImagePreview, setShowImagePreview] = React.useState(false);
 
@@ -90,7 +92,6 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
         else console.error("Gagal fetch produk:", produkJson.message);
         if (cabangJson.success) {
           setCabang(cabangJson.data);
-          console.log("Data cabang:", cabangJson.data);
         } else {
           console.error("Gagal fetch cabang:", cabangJson.message);
         }
@@ -166,7 +167,8 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
     const matchesSearch = p.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.kategori.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCabang = filterCabang === "all" ||
-      p.cabangId === filterCabang;
+      p.cabangId === filterCabang ||
+      !p.cabangId;
     return matchesSearch && matchesCabang;
   });
 
@@ -176,13 +178,18 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
       return;
     }
 
+    if (!/^[a-zA-Z\s]+$/.test(formData.nama.trim())) {
+      alert("Nama produk hanya boleh huruf");
+      return;
+    }
+
     if (!formData.kategori) {
       alert("Kategori wajib dipilih");
       return;
     }
 
     if (!formData.cabangId) {
-      alert("Cabang wajib dipilih");
+      alert("Pilih cabang atau 'Semua Cabang'");
       return;
     }
 
@@ -213,10 +220,15 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
         : "/api/menu";
       const method = selectedProduk ? "PUT" : "POST";
 
+      const payload = {
+        ...formData,
+        cabangId: formData.cabangId === SEMUA_CABANG_VALUE ? null : formData.cabangId,
+      };
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
 
@@ -289,25 +301,25 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                 className="pl-9 h-10 bg-white border-slate-200"
               />
             </div>
-<div className="w-full sm:w-[280px]">
-               <Select value={filterCabang} onValueChange={setFilterCabang}>
-                 <SelectTrigger className="h-10 bg-white border-slate-200 w-full">
-                   <SelectValue placeholder="Pilih Cabang" />
-                 </SelectTrigger>
-<SelectContent>
-                    <SelectItem value="all">Semua Cabang</SelectItem>
-                    {cabang.length === 0 ? (
-                      <SelectItem value="loading" disabled>Memuat data cabang...</SelectItem>
-                    ) : (
-                      cabang.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.nama}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-               </Select>
-             </div>
+            <div className="w-full sm:w-[280px]">
+              <Select value={filterCabang} onValueChange={setFilterCabang}>
+                <SelectTrigger className="h-10 bg-white border-slate-200 w-full">
+                  <SelectValue placeholder="Pilih Cabang" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Cabang</SelectItem>
+                  {cabang.length === 0 ? (
+                    <SelectItem value="loading" disabled>Memuat data cabang...</SelectItem>
+                  ) : (
+                    cabang.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.nama}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="overflow-auto border border-slate-100 rounded-xl">
@@ -320,10 +332,10 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                   <TableHead className="text-xs font-semibold text-slate-600">Cabang</TableHead>
                   <TableHead className="text-xs font-semibold text-slate-600">Harga</TableHead>
                   <TableHead className="text-xs font-semibold text-slate-600">Status</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-600 text-right">Edit</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-600 text-right">Hapus</TableHead>
-                  </TableRow>
-                </TableHeader>
+                  <TableHead className="text-xs font-semibold text-slate-600 text-right">Edit</TableHead>
+                  <TableHead className="text-xs font-semibold text-slate-600 text-right">Hapus</TableHead>
+                </TableRow>
+              </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
@@ -369,9 +381,17 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                           {p.kategori}
                         </Badge>
                       </TableCell>
-<TableCell className="text-sm text-slate-600">
-                         {p.cabang?.nama || "-"}{p.cabang?.alamat && <div className="text-xs text-slate-400">{p.cabang.alamat}</div>}
-                       </TableCell>
+                      <TableCell className="text-sm text-slate-600">
+                        {!p.cabangId && filterCabang !== "all" ? (
+                          <span>{cabang.find(c => c.id === filterCabang)?.nama || "-"}</span>
+                        ) : !p.cabangId ? (
+                          <Badge className="bg-[#4A776E]/10 text-[#4A776E] border-[#4A776E]/20 text-[10px] font-medium" variant="outline">
+                            Semua Cabang
+                          </Badge>
+                        ) : (
+                          <span>{p.cabang?.nama || "-"}</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-sm text-slate-900">
                         {formatRupiah(p.harga)}
                       </TableCell>
@@ -437,7 +457,10 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                 <label className="text-sm font-medium text-slate-700">Nama Produk <span className="text-red-500">*</span></label>
                 <Input
                   value={formData.nama}
-                  onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                    setFormData({ ...formData, nama: val });
+                  }}
                   placeholder="Contoh: Dimsum Ayam"
                   className="h-10 border-slate-200"
                 />
@@ -465,7 +488,9 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-700">Cabang *</label>
+              <label className="text-sm font-medium text-slate-700">
+                Cabang <span className="text-red-500">*</span>
+              </label>
               <Select
                 value={formData.cabangId || ""}
                 onValueChange={(val) => setFormData({ ...formData, cabangId: val })}
@@ -477,14 +502,18 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
                   {cabang.length === 0 ? (
                     <SelectItem value="loading" disabled>Memuat data cabang...</SelectItem>
                   ) : (
-                    cabang.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.nama}
-                      </SelectItem>
-                    ))
+                    <>
+                      <SelectItem value={SEMUA_CABANG_VALUE}>Semua Cabang</SelectItem>
+                      {cabang.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.nama}
+                        </SelectItem>
+                      ))}
+                    </>
                   )}
                 </SelectContent>
               </Select>
+              
             </div>
 
             <div className="grid grid-cols-2 gap-3 lg:gap-4">
@@ -511,28 +540,28 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
             </div>
 
             <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-700">Gambar <span className="text-red-500">*</span></label>
+              <label className="text-sm font-medium text-slate-700">Gambar <span className="text-red-500">*</span></label>
               <div className="flex items-center gap-3 lg:gap-4">
-              <label className="cursor-pointer flex items-center gap-2 px-3 lg:px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition text-sm text-slate-600">
-                {uploading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Uploading...</span>
-                  </>
-                ) : (
-                  <>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageChange}
-                      id="upload-file"
-                    />
-                    <ImageIcon className="h-4 w-4" />
-                    <span>Upload Gambar</span>
-                  </>
-                )}
-              </label>
+                <label className="cursor-pointer flex items-center gap-2 px-3 lg:px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition text-sm text-slate-600">
+                  {uploading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Uploading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageChange}
+                        id="upload-file"
+                      />
+                      <ImageIcon className="h-4 w-4" />
+                      <span>Upload Gambar</span>
+                    </>
+                  )}
+                </label>
               </div>
               {imagePreview && (
                 <img
@@ -545,7 +574,7 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
             </div>
 
             <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-700">Deskripsi <span className="text-red-500">*</span></label>
+              <label className="text-sm font-medium text-slate-700">Deskripsi <span className="text-red-500">*</span></label>
               <Input
                 value={formData.deskripsi}
                 onChange={(e) => setFormData({ ...formData, deskripsi: e.target.value })}
@@ -586,51 +615,45 @@ const [filterCabang, setFilterCabang] = React.useState<string>("all");
         </DialogContent>
       </Dialog>
 
-       {/* Dialog Hapus */}
-       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-         <DialogContent className="max-w-sm sm:max-w-md border-slate-200">
-           <DialogHeader>
-             <DialogTitle className="text-lg font-semibold text-slate-900">
-               Konfirmasi Hapus
-             </DialogTitle>
-           </DialogHeader>
-           <div className="py-3 lg:py-4">
-             <p className="text-slate-600 text-sm">
-               Apakah Anda yakin ingin menghapus produk{" "}
-               <span className="font-semibold text-slate-900">{selectedProduk?.nama}</span>?
-               Tindakan ini tidak dapat dibatalkan.
-             </p>
-           </div>
-           <DialogFooter className="flex flex-col sm:flex-row gap-2">
-             <Button
-               variant="outline"
-               onClick={() => setIsDeleteDialogOpen(false)}
-               className="border-slate-200"
-             >
-               Batal
-             </Button>
-             <Button variant="destructive" onClick={handleDelete}>
-               Hapus
-             </Button>
-           </DialogFooter>
-         </DialogContent>
-       </Dialog>
+      {/* Dialog Hapus */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-sm sm:max-w-md border-slate-200">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold text-slate-900">Konfirmasi Hapus</DialogTitle>
+          </DialogHeader>
+          <div className="py-3 lg:py-4">
+            <p className="text-slate-600 text-sm">
+              Apakah Anda yakin ingin menghapus produk{" "}
+              <span className="font-semibold text-slate-900">{selectedProduk?.nama}</span>?
+              Tindakan ini tidak dapat dibatalkan.
+            </p>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} className="border-slate-200">
+              Batal
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Hapus
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-       {/* Dialog Preview Gambar */}
-       <Dialog open={showImagePreview} onOpenChange={setShowImagePreview}>
-         <DialogContent className="max-w-2xl sm:max-w-3xl border-slate-200 p-2">
-           <DialogHeader>
-             <DialogTitle className="sr-only">Preview Gambar</DialogTitle>
-           </DialogHeader>
-           <div className="relative">
-             <img
-               src={imagePreview}
-               alt="Preview"
-               className="w-full h-auto rounded-lg"
-             />
-           </div>
-         </DialogContent>
-       </Dialog>
-     </div>
-   );
- }
+      {/* Dialog Preview Gambar */}
+      <Dialog open={showImagePreview} onOpenChange={setShowImagePreview}>
+        <DialogContent className="max-w-2xl sm:max-w-3xl border-slate-200 p-2">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Preview Gambar</DialogTitle>
+          </DialogHeader>
+          <div className="relative">
+            <img
+              src={imagePreview}
+              alt="Preview"
+              className="w-full h-auto rounded-lg"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
