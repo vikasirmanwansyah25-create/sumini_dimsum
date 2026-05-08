@@ -178,8 +178,8 @@ export default function ProdukPage() {
       return;
     }
 
-    if (!/^[a-zA-Z\s]+$/.test(formData.nama.trim())) {
-      alert("Nama produk hanya boleh huruf");
+    if (!/^[a-zA-Z0-9\s\-'.,&()\/]+$/.test(formData.nama.trim())) {
+      alert("Nama produk hanya boleh huruf, angka, dan karakter unik");
       return;
     }
 
@@ -458,7 +458,7 @@ export default function ProdukPage() {
                 <Input
                   value={formData.nama}
                   onChange={(e) => {
-                    const val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+                    const val = e.target.value.replace(/[^a-zA-Z0-9\s\-'.,&()\/]/g, "");
                     setFormData({ ...formData, nama: val });
                   }}
                   placeholder="Contoh: Dimsum Ayam"

@@ -64,11 +64,20 @@ export default function CashierInventoryPage() {
   const [selectedBahan, setSelectedBahan] = React.useState<BahanBaku | null>(null);
   const [saving, setSaving] = React.useState(false);
 
-  const [formData, setFormData] = React.useState({
+  const [formData, setFormData] = React.useState<{
+    nama: string;
+    rasa: string;
+    berat: number;
+    stok: number | string;
+    gambar: string;
+    deskripsi: string;
+    jenisProduk: string;
+    satuan: string;
+  }>({
     nama: "",
     rasa: "",
     berat: 150,
-    stok: 0,
+    stok: "",
     gambar: "",
     deskripsi: "",
     jenisProduk: "Frozen Food",
@@ -117,7 +126,7 @@ export default function CashierInventoryPage() {
         nama: p.nama,
         rasa: p.rasa || "",
         berat: p.berat,
-        stok: p.stok,
+        stok: p.stok ?? "",
         gambar: p.gambar || "",
         deskripsi: p.deskripsi || "",
         jenisProduk: p.jenisProduk || "Makanan",
@@ -130,7 +139,7 @@ export default function CashierInventoryPage() {
         nama: "",
         rasa: "",
         berat: 150,
-        stok: 0,
+        stok: "",
         gambar: "",
         deskripsi: "",
         jenisProduk: "Frozen Food",
@@ -200,7 +209,7 @@ export default function CashierInventoryPage() {
     }
 
     // Validasi stok wajib diisi dan tidak boleh negatif
-    if (formData.stok === undefined || formData.stok === null || formData.stok < 0) {
+    if (formData.stok === undefined || formData.stok === null || formData.stok === "" || Number(formData.stok) < 0) {
       alert("Stok wajib diisi dan tidak boleh negatif");
       return;
     }
@@ -221,6 +230,7 @@ export default function CashierInventoryPage() {
     try {
       const payload = {
         ...formData,
+        stok: formData.stok === "" ? 0 : formData.stok,
         cabangId: currentUser?.cabangId,
       };
 
@@ -540,7 +550,7 @@ export default function CashierInventoryPage() {
                   />
                </div>
              )}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">Berat (g)</label>
                 <Input
@@ -556,13 +566,24 @@ export default function CashierInventoryPage() {
                     type="number"
                     min={0}
                     value={formData.stok}
-                    onChange={(e) => setFormData({ ...formData, stok: Math.max(0, Number(e.target.value)) })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setFormData({ ...formData, stok: "" });
+                        return;
+                      }
+                      const num = parseFloat(val);
+                      if (!isNaN(num) && num >= 0) {
+                        setFormData({ ...formData, stok: Math.floor(num) });
+                      }
+                    }}
+                    className="flex-1 min-w-0"
                   />
                   <Select
                     value={formData.satuan}
                     onValueChange={(val) => setFormData({ ...formData, satuan: val })}
                   >
-                    <SelectTrigger className="w-[120px]">
+                    <SelectTrigger className="w-[100px] sm:w-[120px] shrink-0">
                       <SelectValue placeholder="Satuan" />
                     </SelectTrigger>
                       <SelectContent>

@@ -87,11 +87,21 @@ export default function InventoryPage() {
   const [selectedBahan, setSelectedBahan] = React.useState<BahanBaku | null>(null);
   const [saving, setSaving] = React.useState(false);
 
-  const [formData, setFormData] = React.useState({
+  const [formData, setFormData] = React.useState<{
+    nama: string;
+    rasa: string;
+    berat: number;
+    stok: number | string;
+    gambar: string;
+    deskripsi: string;
+    jenisProduk: string;
+    cabangId: string;
+    satuan: string;
+  }>({
     nama: "",
     rasa: "",
     berat: 150,
-    stok: 0,
+    stok: "",
     gambar: "",
     deskripsi: "",
     jenisProduk: "Frozen Food",
@@ -109,7 +119,7 @@ export default function InventoryPage() {
         nama: p.nama || "",
         rasa: p.rasa || "",
         berat: p.berat || 150,
-        stok: p.stok || 0,
+        stok: p.stok ?? "",
         gambar: p.gambar || "",
         deskripsi: p.deskripsi || "",
         jenisProduk: p.jenisProduk || "Makanan",
@@ -123,7 +133,7 @@ export default function InventoryPage() {
         nama: "",
         rasa: "",
         berat: 150,
-        stok: 0,
+        stok: "",
         gambar: "",
         deskripsi: "",
         jenisProduk: "Frozen Food",
@@ -206,7 +216,7 @@ export default function InventoryPage() {
     }
 
     // Validasi stok wajib diisi dan tidak boleh negatif
-    if (formData.stok === undefined || formData.stok === null || formData.stok < 0) {
+    if (formData.stok === undefined || formData.stok === null || formData.stok === "" || Number(formData.stok) < 0) {
       alert("Stok wajib diisi dan tidak boleh negatif");
       return;
     }
@@ -225,11 +235,13 @@ export default function InventoryPage() {
 
      setSaving(true);
     try {
+      const payload = { ...formData, stok: formData.stok === "" ? 0 : formData.stok };
+
       if (selectedBahan) {
         const res = await fetch(`/api/bahan-baku/${selectedBahan.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
         const json = await res.json();
         if (json.success) {
@@ -242,7 +254,7 @@ export default function InventoryPage() {
         const res = await fetch("/api/bahan-baku", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
         const json = await res.json();
         if (json.success) {
@@ -596,19 +608,27 @@ export default function InventoryPage() {
                 <label className="text-sm font-medium text-slate-700">Stok <span className="text-red-500">*</span></label>
                 <div className="flex gap-2">
                   <Input
-                     type="number"
-                     min={0}
-                     value={formData.stok}
-                     onChange={(e) =>
-                       setFormData({ ...formData, stok: Math.max(0, parseFloat(e.target.value) || 0) })
-                     }
-                     className="h-10 border-slate-200"
+                      type="number"
+                      min={0}
+                      value={formData.stok}
+                      onChange={(e) => {
+                       const val = e.target.value;
+                       if (val === '') {
+                         setFormData({ ...formData, stok: "" });
+                         return;
+                       }
+                       const num = parseFloat(val);
+                       if (!isNaN(num) && num >= 0) {
+                         setFormData({ ...formData, stok: Math.floor(num) });
+                       }
+                     }}
+                     className="h-10 border-slate-200 flex-1 min-w-0"
                    />
                   <Select
                     value={formData.satuan}
                     onValueChange={(val) => setFormData({ ...formData, satuan: val })}
                   >
-                    <SelectTrigger className="h-10 border-slate-200 w-[120px]">
+                    <SelectTrigger className="h-10 border-slate-200 w-[100px] sm:w-[120px] shrink-0">
                       <SelectValue placeholder="Satuan" />
                     </SelectTrigger>
                       <SelectContent>
